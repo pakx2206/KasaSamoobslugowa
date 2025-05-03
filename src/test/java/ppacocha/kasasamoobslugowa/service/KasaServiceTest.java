@@ -10,11 +10,24 @@ import ppacocha.kasasamoobslugowa.model.Transakcja;
 import java.math.BigDecimal;
 import java.util.List;
 
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.charset.StandardCharsets;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.Statement;
+
 public class KasaServiceTest {
   private KasaService kasa;
 
   @BeforeEach
-  void setUp() {
+  void setUp() throws Exception {
+    Files.deleteIfExists(Paths.get("kasa.db"));
+    String sql = Files.readString(Paths.get("src/main/resources/schema.sql"), StandardCharsets.UTF_8);
+    try (Connection conn = DriverManager.getConnection("jdbc:sqlite:kasa.db");
+         Statement st = conn.createStatement()) {
+      st.executeUpdate(sql);
+    }
     kasa = new KasaService();
   }
 
@@ -33,7 +46,7 @@ public class KasaServiceTest {
     Produkt p = new Produkt("Y", new BigDecimal("2.00"), "444", "TAG4");
     kasa.dodajProdukt(p);
     kasa.zmienIlosc(p, 3);
-    List < Produkt > koszyk = kasa.getKoszyk();
+    List<Produkt> koszyk = kasa.getKoszyk();
     assertEquals(3, koszyk.size(), "Koszyk powinien zawierać 3 sztuki produktu Y");
   }
 

@@ -14,7 +14,6 @@ public class ConsoleUI {
     private final KasaService kasaService = new KasaService();
     private final RaportService raportService = new RaportService();
     private final Scanner scanner = new Scanner(System.in);
-    // TODO: replace with database-backed repository
     private final List<Transakcja> historiaTransakcji = new ArrayList<>();
 
     public void start() {
@@ -66,7 +65,7 @@ public class ConsoleUI {
         Produkt produkt = new Produkt(nazwa, cena, kod, nfc);
         kasaService.dodajProdukt(produkt);
         System.out.println("Dodano produkt: " + produkt);
-        // TODO: save produkt to database
+        
     }
 
     private void removeProduct() {
@@ -75,7 +74,7 @@ public class ConsoleUI {
         Produkt dummy = new Produkt("", BigDecimal.ZERO, kod, "");
         kasaService.usunProdukt(dummy);
         System.out.println("Usunięto produkt o kodzie: " + kod);
-        // TODO: update database
+        
     }
 
     private void changeQuantity() {
@@ -86,7 +85,7 @@ public class ConsoleUI {
         Produkt dummy = new Produkt("", BigDecimal.ZERO, kod, "");
         kasaService.zmienIlosc(dummy, ilosc);
         System.out.println("Ustawiono ilość " + ilosc + " dla produktu o kodzie: " + kod);
-        // TODO: update database
+        
     }
 
     private void viewCart() {
@@ -103,7 +102,7 @@ public class ConsoleUI {
         Transakcja transakcja = kasaService.finalizujTransakcje();
         historiaTransakcji.add(transakcja);
         System.out.println("Transakcja zakończona. Suma: " + transakcja.getSuma());
-        // TODO: save transaction to database
+       
     }
 
     private void printReceipt() {
@@ -117,7 +116,11 @@ public class ConsoleUI {
     }
 
     private void printDailyReport() {
-        List<Transakcja> dzienne = historiaTransakcji; // TODO: filter by date or fetch from DB
+        if (historiaTransakcji.isEmpty()) {
+        System.out.println("Brak transakcji do raportu dziennego.");
+        return;
+        }
+        List<Transakcja> dzienne = historiaTransakcji;
         String raport = raportService.generujRaportDzienny(dzienne);
         System.out.println(raport);
     }
