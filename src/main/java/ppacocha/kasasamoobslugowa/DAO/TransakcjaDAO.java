@@ -1,4 +1,4 @@
-package ppacocha.kasasamoobslugowa.DAO;
+package ppacocha.kasasamoobslugowa.dao;
 
 import ppacocha.kasasamoobslugowa.model.Transakcja;
 import java.util.List;

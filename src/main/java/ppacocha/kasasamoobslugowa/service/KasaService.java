@@ -1,45 +1,58 @@
 package ppacocha.kasasamoobslugowa.service;
 
-import ppacocha.kasasamoobslugowa.DAO.ProduktDAO;
-import ppacocha.kasasamoobslugowa.DAO.TransakcjaDAO;
-import ppacocha.kasasamoobslugowa.DAO.impl.SQLiteProduktDAO;
-import ppacocha.kasasamoobslugowa.DAO.impl.SQLiteTransakcjaDAO;
+import ppacocha.kasasamoobslugowa.dao.ProduktDAO;
 import ppacocha.kasasamoobslugowa.model.Produkt;
 import ppacocha.kasasamoobslugowa.model.Transakcja;
-import java.util.ArrayList;
+
 import java.util.List;
+import ppacocha.kasasamoobslugowa.dao.KoszykDAO;
+import ppacocha.kasasamoobslugowa.dao.TransakcjaDAO;
+import ppacocha.kasasamoobslugowa.dao.impl.SQLiteKoszykDAO;
+import ppacocha.kasasamoobslugowa.dao.impl.SQLiteProduktDAO;
+import ppacocha.kasasamoobslugowa.dao.impl.SQLiteTransakcjaDAO;
 
 public class KasaService {
-    private final ProduktDAO produktDao = new SQLiteProduktDAO();
+    private final ProduktDAO produktDao       = new SQLiteProduktDAO();
+    private final KoszykDAO koszykDao         = new SQLiteKoszykDAO();
     private final TransakcjaDAO transakcjaDao = new SQLiteTransakcjaDAO();
-    private List<Produkt> koszyk = new ArrayList<>();
 
-    public void dodajProdukt(Produkt produkt) {
-        produktDao.save(produkt);
-        koszyk.add(produkt);
-    }
-
-    public void usunProdukt(Produkt produkt) {
-        produktDao.delete(produkt.getKodKreskowy());
-        koszyk.remove(produkt);
-    }
-
-    public void zmienIlosc(Produkt produkt, int ilosc) {
-        koszyk.removeIf(p -> p.equals(produkt));
-        for (int i = 0; i < ilosc; i++) {
-            koszyk.add(produkt);
+    public void dodajPoKodzieLubTagu(String kodLubTag) {
+        Produkt p = produktDao.findById(kodLubTag);
+        if (p == null) {
+            p = produktDao.findByNfcTag(kodLubTag);
         }
-        produktDao.update(produkt);
+        if (p == null) {
+            throw new IllegalArgumentException(
+                "Produkt o identyfikatorze '" + kodLubTag + "' nie istnieje w bazie"
+            );
+        }
+        koszykDao.add(p.getKodKreskowy(), 1);
     }
 
-    public Transakcja finalizujTransakcje() {
-        Transakcja transakcja = new Transakcja(new ArrayList<>(koszyk));
-        int id = transakcjaDao.save(transakcja);
-        koszyk.clear();
-        return transakcjaDao.findById(id);
+    public void usunPoKodzie(String kodKreskowy) {
+        koszykDao.delete(kodKreskowy);
+    }
+
+    public void zmienIloscPoKodzie(String kodKreskowy, int ilosc) {
+        if (ilosc <= 0) {
+            koszykDao.delete(kodKreskowy);
+        } else {
+            koszykDao.update(kodKreskowy, ilosc);
+        }
     }
 
     public List<Produkt> getKoszyk() {
-        return new ArrayList<>(koszyk);
+        return koszykDao.findAll();
+    }
+
+    public Transakcja finalizujTransakcje() {
+        List<Produkt> items = koszykDao.findAll();
+        if (items.isEmpty()) {
+            throw new IllegalStateException("Koszyk jest pusty — nie można finalizować transakcji");
+        }
+        Transakcja tx = new Transakcja(items);
+        int id = transakcjaDao.save(tx);
+        koszykDao.clear();
+        return transakcjaDao.findById(id);
     }
 }

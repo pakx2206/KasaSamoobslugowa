@@ -52,29 +52,26 @@ public class ConsoleUI {
         }
         System.out.println("Koniec programu.");
     }
-
     private void addProduct() {
-        System.out.print("Nazwa: ");
-        String nazwa = scanner.nextLine();
-        System.out.print("Cena: ");
-        BigDecimal cena = new BigDecimal(scanner.nextLine());
-        System.out.print("Kod kreskowy: ");
-        String kod = scanner.nextLine();
-        System.out.print("Tag NFC: ");
-        String nfc = scanner.nextLine();
-        Produkt produkt = new Produkt(nazwa, cena, kod, nfc);
-        kasaService.dodajProdukt(produkt);
-        System.out.println("Dodano produkt: " + produkt);
-        
+        System.out.print("Podaj kod kreskowy lub tag NFC: ");
+        String input = scanner.nextLine().trim();
+        try {
+            kasaService.dodajPoKodzieLubTagu(input);
+            System.out.println("Dodano produkt o ID: " + input);
+        } catch (IllegalArgumentException ex) {
+            System.out.println("Błąd: " + ex.getMessage());
+        }
     }
 
     private void removeProduct() {
-        System.out.print("Kod kreskowy produktu do usunięcia: ");
+        System.out.print("Kod kreskowy do usunięcia: ");
         String kod = scanner.nextLine();
-        Produkt dummy = new Produkt("", BigDecimal.ZERO, kod, "");
-        kasaService.usunProdukt(dummy);
-        System.out.println("Usunięto produkt o kodzie: " + kod);
-        
+        try {
+            kasaService.usunPoKodzie(kod);
+            System.out.println("Usunięto produkt o kodzie: " + kod);
+        } catch (Exception ex) {
+            System.out.println("Błąd przy usuwaniu: " + ex.getMessage());
+        }
     }
 
     private void changeQuantity() {
@@ -82,11 +79,14 @@ public class ConsoleUI {
         String kod = scanner.nextLine();
         System.out.print("Nowa ilość: ");
         int ilosc = Integer.parseInt(scanner.nextLine());
-        Produkt dummy = new Produkt("", BigDecimal.ZERO, kod, "");
-        kasaService.zmienIlosc(dummy, ilosc);
-        System.out.println("Ustawiono ilość " + ilosc + " dla produktu o kodzie: " + kod);
-        
-    }
+        try {
+            kasaService.zmienIloscPoKodzie(kod, ilosc);
+            System.out.println("Ustawiono ilość " + ilosc + " dla kodu: " + kod);
+        } catch (Exception ex) {
+            System.out.println("Błąd przy zmianie ilości: " + ex.getMessage());
+        }
+}
+
 
     private void viewCart() {
         List<Produkt> koszyk = kasaService.getKoszyk();

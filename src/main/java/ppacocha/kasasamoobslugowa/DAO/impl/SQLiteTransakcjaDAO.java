@@ -1,6 +1,6 @@
-package ppacocha.kasasamoobslugowa.DAO.impl;
+package ppacocha.kasasamoobslugowa.dao.impl;
 import java.math.RoundingMode;
-import ppacocha.kasasamoobslugowa.DAO.TransakcjaDAO;
+import ppacocha.kasasamoobslugowa.dao.TransakcjaDAO;
 import ppacocha.kasasamoobslugowa.model.Transakcja;
 import ppacocha.kasasamoobslugowa.model.Produkt;
 import java.sql.*;
@@ -8,6 +8,7 @@ import java.time.LocalDateTime;
 import java.math.BigDecimal;
 import java.util.*;
 import java.util.stream.Collectors;
+import ppacocha.kasasamoobslugowa.dao.ProduktDAO;
 
 public class SQLiteTransakcjaDAO implements TransakcjaDAO {
     private static final String URL = "jdbc:sqlite:kasa.db";
@@ -114,5 +115,11 @@ public class SQLiteTransakcjaDAO implements TransakcjaDAO {
         } catch (SQLException ex) {
             ex.printStackTrace();
         }
+    }
+    public static void main(String[] args) {
+        ProduktDAO dao = new SQLiteProduktDAO();
+        List<Produkt> all = dao.findAll();
+        System.out.println("Mamy w bazie: " + all.size() + " produktów");
+        all.forEach(System.out::println);
     }
 }

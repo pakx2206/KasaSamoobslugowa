@@ -1,4 +1,3 @@
-// src/main/java/ppacocha/kasasamoobslugowa/model/Transakcja.java
 package ppacocha.kasasamoobslugowa.model;
 
 import java.time.LocalDateTime;

@@ -1,10 +1,11 @@
-package ppacocha.kasasamoobslugowa.DAO;
+package ppacocha.kasasamoobslugowa.dao;
 
 import ppacocha.kasasamoobslugowa.model.Produkt;
 import java.util.List;
 
 public interface ProduktDAO {
     Produkt findById(String kodKreskowy);
+    Produkt findByNfcTag(String nfcTag);
     List<Produkt> findAll();
     void save(Produkt produkt);
     void update(Produkt produkt);

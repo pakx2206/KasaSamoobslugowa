@@ -1,10 +1,10 @@
 package ppacocha.kasasamoobslugowa.service;
 
-import ppacocha.kasasamoobslugowa.DAO.TransakcjaDAO;
-import ppacocha.kasasamoobslugowa.DAO.impl.SQLiteTransakcjaDAO;
+import ppacocha.kasasamoobslugowa.dao.impl.SQLiteTransakcjaDAO;
 import ppacocha.kasasamoobslugowa.model.Transakcja;
 import java.util.List;
 import java.math.BigDecimal;
+import ppacocha.kasasamoobslugowa.dao.TransakcjaDAO;
 
 public class RaportService {
     private final TransakcjaDAO transakcjaDao = new SQLiteTransakcjaDAO();

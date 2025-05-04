@@ -18,3 +18,7 @@ CREATE TABLE IF NOT EXISTS transakcja_produkt (
     FOREIGN KEY(transakcja_id) REFERENCES transakcja(id),
     FOREIGN KEY(kod_kreskowy)  REFERENCES produkt(kod_kreskowy)
 );
+CREATE TABLE IF NOT EXISTS koszyk (
+    kod_kreskowy TEXT PRIMARY KEY,
+    ilosc        INTEGER NOT NULL
+);

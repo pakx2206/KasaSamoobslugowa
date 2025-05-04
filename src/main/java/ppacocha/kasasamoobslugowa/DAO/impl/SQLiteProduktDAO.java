@@ -1,9 +1,9 @@
-package ppacocha.kasasamoobslugowa.DAO.impl;
+package ppacocha.kasasamoobslugowa.dao.impl;
 
-import ppacocha.kasasamoobslugowa.DAO.ProduktDAO;
 import ppacocha.kasasamoobslugowa.model.Produkt;
 import java.sql.*;
 import java.util.*;
+import ppacocha.kasasamoobslugowa.dao.ProduktDAO;
 
 public class SQLiteProduktDAO implements ProduktDAO {
     private static final String URL = "jdbc:sqlite:kasa.db";
@@ -77,4 +77,25 @@ public class SQLiteProduktDAO implements ProduktDAO {
             e.printStackTrace();
         }
     }
+    @Override
+    public Produkt findByNfcTag(String nfcTag) {
+        String sql = "SELECT kod_kreskowy, nazwa, cena FROM produkt WHERE nfc_tag = ?";
+        try (Connection conn = DriverManager.getConnection(URL);
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, nfcTag);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return new Produkt(
+                        rs.getString("nazwa"),
+                        rs.getBigDecimal("cena"),
+                        rs.getString("kod_kreskowy"),
+                        nfcTag
+                    );
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null;
+}
 }
