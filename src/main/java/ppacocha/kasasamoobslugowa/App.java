@@ -1,6 +1,5 @@
 package ppacocha.kasasamoobslugowa;
 
-import ppacocha.kasasamoobslugowa.ui.ConsoleUI;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -9,7 +8,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.io.IOException;
 import javax.swing.SwingUtilities;
-import ppacocha.kasasamoobslugowa.ui.MainFrame;
+import ppacocha.kasasamoobslugowa.ui.AppFrame;
 
 public class App {
   public static void main(String[] args) {
@@ -38,7 +37,7 @@ public class App {
     }
 
     SwingUtilities.invokeLater(() -> {
-            new MainFrame().setVisible(true);
+            new AppFrame().setVisible(true);
         });
   }
 }
