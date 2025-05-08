@@ -5,14 +5,16 @@ import java.util.List;
 import java.math.BigDecimal;
 
 public class Transakcja {
-    private List<Produkt> produkty;
+    private int id;
+    private final List<Produkt> produkty;
     private LocalDateTime data;
     private BigDecimal suma;
-
-    public Transakcja(List<Produkt> produkty) {
+    private final String typPlatnosci;  
+    public Transakcja(List<Produkt> produkty, String typPlatnosci) {
         this.produkty = produkty;
         this.data = LocalDateTime.now();
         this.suma = obliczSume();
+        this.typPlatnosci = typPlatnosci;
     }
 
     private BigDecimal obliczSume() {
@@ -21,33 +23,24 @@ public class Transakcja {
                        .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
-    public List<Produkt> getProdukty() {
-        return produkty;
-    }
+    public int getId() { return id; }
+    public void setId(int id) { this.id = id; }
 
-    public LocalDateTime getData() {
-        return data;
-    }
-
-    public BigDecimal getSuma() {
-        return suma;
-    }
-
-    
-    public void setData(LocalDateTime data) {
-        this.data = data;
-    }
-
-    public void setSuma(BigDecimal suma) {
-        this.suma = suma;
-    }
+    public List<Produkt> getProdukty() { return produkty; }
+    public LocalDateTime getData() { return data; }
+    public void setData(LocalDateTime data) { this.data = data; }
+    public BigDecimal getSuma() { return suma; }
+    public void setSuma(BigDecimal suma) { this.suma = suma; }
+    public String getTypPlatnosci() { return typPlatnosci; }
 
     @Override
     public String toString() {
         return "Transakcja{" +
-               "produkty=" + produkty +
+               "id=" + id +
                ", data=" + data +
                ", suma=" + suma +
+               ", typPlatnosci='" + typPlatnosci + '\'' +
+               ", iloscProd=" + produkty.size() +
                '}';
     }
 }

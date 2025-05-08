@@ -10,4 +10,6 @@ public interface ProduktDAO {
     void save(Produkt produkt);
     void update(Produkt produkt);
     void delete(String kodKreskowy);
+    List<Produkt> findByPartialCode(String partialCode);
+
 }

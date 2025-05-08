@@ -9,6 +9,7 @@ public class MainFrame extends JFrame {
     private final CardLayout cardLayout = new CardLayout();
     private final JPanel cards = new JPanel(cardLayout);
     private final KasaService kasaService = new KasaService();
+    private final CartPanel cartPanel = new CartPanel(kasaService, this);
 
     public MainFrame() {
         super("Kasa Samoobsługowa");
@@ -66,10 +67,15 @@ public class MainFrame extends JFrame {
         c.gridy = 1; p.add(btnCart, c);
         return p;
     }
+    public CartPanel getCartPanel() {
+    return cartPanel;
+    }   
+
+
 
     public CardLayout getCardLayout() { return cardLayout; }
     public JPanel getCards() { return cards; }
-
+    
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> {
             new MainFrame().setVisible(true);

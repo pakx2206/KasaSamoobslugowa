@@ -51,7 +51,7 @@ public class CartPanel extends JPanel {
         refreshList();
     }
 
-    private void refreshList() {
+    void refreshList() {
         listModel.clear();
         for (Produkt p : kasaService.getKoszyk()) {
             listModel.addElement(p);
@@ -88,13 +88,53 @@ public class CartPanel extends JPanel {
     }
 
     private void checkout() {
-        Transakcja t = kasaService.finalizujTransakcje();
+        if (kasaService.getKoszyk().isEmpty()) {
+            JOptionPane.showMessageDialog(
+                this,
+                "Koszyk jest pusty — nie można finalizować transakcji",
+                "Błąd",
+                JOptionPane.ERROR_MESSAGE
+            );
+            return;
+        }
+
+        String[] options = {"Gotówka", "Karta"};
+        int choice = JOptionPane.showOptionDialog(
+            this,
+            "Wybierz metodę płatności:",
+            "Płatność",
+            JOptionPane.DEFAULT_OPTION,
+            JOptionPane.QUESTION_MESSAGE,
+            null,
+            options,
+            options[0]
+        );
+        if (choice < 0) {
+            return;
+        }
+        String typPlatnosci = options[choice];
+
+        Transakcja t;
+        try {
+            t = kasaService.finalizujTransakcje(typPlatnosci);
+        } catch (IllegalStateException ex) {
+            JOptionPane.showMessageDialog(
+                this,
+                ex.getMessage(),
+                "Błąd",
+                JOptionPane.ERROR_MESSAGE
+            );
+            return;
+        }
+
         JOptionPane.showMessageDialog(
             this,
-            "Transakcja zakończona.\nSuma: " + t.getSuma(),
+            "Transakcja zakończona.\nSuma: " + t.getSuma() + " PLN\nPłatność: " + t.getTypPlatnosci(),
             "Potwierdzenie",
             JOptionPane.INFORMATION_MESSAGE
         );
+
         refreshList();
+        mainFrame.getCardLayout().show(mainFrame.getCards(), "START");
     }
 }

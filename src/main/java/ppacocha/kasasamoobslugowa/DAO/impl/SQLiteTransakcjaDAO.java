@@ -14,71 +14,102 @@ public class SQLiteTransakcjaDAO implements TransakcjaDAO {
     private static final String URL = "jdbc:sqlite:kasa.db";
 
     @Override
-    public int save(Transakcja transakcja) {
-        String insertTxn = "INSERT INTO transakcja(data, suma) VALUES(?, ?)";
+    public int save(Transakcja tx) {
+        String hdrSql = """
+            INSERT INTO transakcja(data, suma, typ_platnosci)
+            VALUES(?, ?, ?)
+            """;
+
         try (Connection conn = DriverManager.getConnection(URL);
-             PreparedStatement psTxn = conn.prepareStatement(insertTxn, Statement.RETURN_GENERATED_KEYS)) {
-            psTxn.setString(1, transakcja.getData().toString());
-            psTxn.setBigDecimal(2, transakcja.getSuma());
-            psTxn.executeUpdate();
+             PreparedStatement psHdr = conn.prepareStatement(hdrSql, Statement.RETURN_GENERATED_KEYS)) {
 
-            ResultSet keys = psTxn.getGeneratedKeys();
-            int id = keys.next() ? keys.getInt(1) : -1;
+            psHdr.setString(1, tx.getData().toString());
+            psHdr.setBigDecimal(2, tx.getSuma());
+            psHdr.setString(3, tx.getTypPlatnosci());
+            psHdr.executeUpdate();
 
-            String insertItem = "INSERT INTO transakcja_produkt(transakcja_id, kod_kreskowy, ilosc) VALUES (?, ?, ?)";
-            try (PreparedStatement psItem = conn.prepareStatement(insertItem)) {
-                Map<String, Long> counts = transakcja.getProdukty().stream()
-                    .collect(Collectors.groupingBy(Produkt::getKodKreskowy, Collectors.counting()));
-                for (Map.Entry<String, Long> e : counts.entrySet()) {
-                    psItem.setInt(1, id);
-                    psItem.setString(2, e.getKey());
-                    psItem.setInt(3, e.getValue().intValue());
-                    psItem.executeUpdate();
-                }
+            int txnId;
+            try (ResultSet rs = psHdr.getGeneratedKeys()) {
+                if (!rs.next()) throw new SQLException("Brak wygenerowanego klucza");
+                txnId = rs.getInt(1);
             }
-            return id;
-        } catch (SQLException ex) {
-            ex.printStackTrace();
+
+            Map<String, Integer> quantities = new HashMap<>();
+            tx.getProdukty().forEach(p ->
+                quantities.merge(p.getKodKreskowy(), 1, Integer::sum)
+            );
+
+            String detSql = """
+                INSERT INTO transakcja_produkt
+                  (transakcja_id, kod_kreskowy, ilosc, cena_jednostkowa)
+                VALUES (?, ?, ?, ?)
+                """;
+            try (PreparedStatement psDet = conn.prepareStatement(detSql)) {
+                for (var entry : quantities.entrySet()) {
+                    String code = entry.getKey();
+                    int     qty  = entry.getValue();
+                    BigDecimal price = tx.getProdukty().stream()
+                        .filter(p -> p.getKodKreskowy().equals(code))
+                        .findFirst()
+                        .get()
+                        .getCena();
+
+                    psDet.setInt(1, txnId);
+                    psDet.setString(2, code);
+                    psDet.setInt(3, qty);
+                    psDet.setBigDecimal(4, price);
+                    psDet.addBatch();
+                }
+                psDet.executeBatch();
+            }
+
+            return txnId;
+
+        } catch (SQLException e) {
+            e.printStackTrace();
             return -1;
         }
     }
 
+    
     @Override
     public Transakcja findById(int id) {
-    String sqlTxn   = "SELECT data, suma FROM transakcja WHERE id = ?";
-    String sqlItems = "SELECT kod_kreskowy, ilosc FROM transakcja_produkt WHERE transakcja_id = ?";
-    try (Connection conn = DriverManager.getConnection(URL);
-         PreparedStatement psTxn   = conn.prepareStatement(sqlTxn);
-         PreparedStatement psItems = conn.prepareStatement(sqlItems)) {
-
-        psTxn.setInt(1, id);
-        ResultSet rsTxn = psTxn.executeQuery();
-        if (!rsTxn.next()) return null;
-
-        LocalDateTime date = LocalDateTime.parse(rsTxn.getString("data"));
-        BigDecimal rawSum = rsTxn.getBigDecimal("suma");
-        BigDecimal sum = rawSum.setScale(2, RoundingMode.UNNECESSARY);
-
-        List<Produkt> products = new ArrayList<>();
-        psItems.setInt(1, id);
-        ResultSet rsItems = psItems.executeQuery();
-        while (rsItems.next()) {
-            String code   = rsItems.getString("kod_kreskowy");
-            int quantity  = rsItems.getInt("ilosc");
-            Produkt p     = new SQLiteProduktDAO().findById(code);
-            for (int i = 0; i < quantity; i++) products.add(p);
+        String sql0 = "SELECT data, suma, typ_platnosci FROM transakcja WHERE id=?";
+        String sql1 = "SELECT kod_kreskowy, ilosc, cena_jednostkowa FROM transakcja_produkt WHERE transakcja_id=?";
+        try (Connection conn = DriverManager.getConnection(URL)) {
+            Transakcja tx = null;
+            try (PreparedStatement ps = conn.prepareStatement(sql0)) {
+                ps.setInt(1, id);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) {
+                        String typ = rs.getString("typ_platnosci");
+                        tx = new Transakcja(new ArrayList<>(), typ);
+                        tx.setId(id);
+                        tx.setData(LocalDateTime.parse(rs.getString("data")));
+                        tx.setSuma(rs.getBigDecimal("suma"));
+                    }
+                }
+            }
+            if (tx == null) return null;
+            try (PreparedStatement ps = conn.prepareStatement(sql1)) {
+                ps.setInt(1, id);
+                try (ResultSet rs = ps.executeQuery()) {
+                    while (rs.next()) {
+                        Produkt p = new SQLiteProduktDAO()
+                              .findById(rs.getString("kod_kreskowy"));
+                        int qty = rs.getInt("ilosc");
+                        for (int i = 0; i < qty; i++) {
+                            tx.getProdukty().add(p);
+                        }
+                    }
+                }
+            }
+            return tx;
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
-
-        Transakcja txn = new Transakcja(products);
-        txn.setData(date);
-        txn.setSuma(sum);
-        return txn;
-
-    } catch (SQLException ex) {
-        ex.printStackTrace();
         return null;
     }
-}
 
     @Override
     public List<Transakcja> findAll() {

@@ -9,4 +9,5 @@ public interface KoszykDAO {
     void delete(String kodKreskowy);
     List<Produkt> findAll();
     void clear();
+    public void addProduct(Produkt p);
 }

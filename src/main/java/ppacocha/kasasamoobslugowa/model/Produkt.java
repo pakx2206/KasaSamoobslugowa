@@ -8,13 +8,16 @@ public class Produkt {
   private BigDecimal cena;
   private String kodKreskowy;
   private String nfcTag;
+  private int ilosc;
 
-  public Produkt(String nazwa, BigDecimal cena, String kodKreskowy, String nfcTag) {
+
+  public Produkt(String nazwa, BigDecimal cena, String kodKreskowy, String nfcTag, int ilosc) {
     this.nazwa = nazwa;
     this.cena = cena;
     this.kodKreskowy = kodKreskowy;
     this.nfcTag = nfcTag;
-  }
+    this.ilosc = ilosc;
+    }
 
   public String getNazwa() {
     return nazwa;
@@ -65,4 +68,11 @@ public class Produkt {
   public String toString() {
     return nazwa + " (" + cena + ")";
   }
+
+    public int getIlosc() {
+        return ilosc;
+    }
+    public void setIlosc(int ilosc) {
+        this.ilosc = ilosc;
+    }   
 }

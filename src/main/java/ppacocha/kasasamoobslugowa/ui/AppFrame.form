@@ -341,6 +341,7 @@
               <Events>
                 <EventHandler event="focusGained" listener="java.awt.event.FocusListener" parameters="java.awt.event.FocusEvent" handler="productCodeTextFieldFocusGained"/>
                 <EventHandler event="focusLost" listener="java.awt.event.FocusListener" parameters="java.awt.event.FocusEvent" handler="productCodeTextFieldFocusLost"/>
+                <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="productCodeTextFieldActionPerformed"/>
               </Events>
             </Component>
             <Component class="javax.swing.JButton" name="searchForProductButton">

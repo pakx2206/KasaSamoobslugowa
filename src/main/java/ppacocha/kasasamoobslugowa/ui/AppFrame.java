@@ -5,18 +5,18 @@
 package ppacocha.kasasamoobslugowa.ui;
 
 import java.awt.CardLayout;
+import java.util.List;
 import javax.swing.JOptionPane;
+import ppacocha.kasasamoobslugowa.model.Produkt;
+import ppacocha.kasasamoobslugowa.model.Transakcja;
+import ppacocha.kasasamoobslugowa.service.KasaService;
+import ppacocha.kasasamoobslugowa.util.ReceiptGenerator;
 
-/**
- *
- * @author wojte
- */
+
 public class AppFrame extends javax.swing.JFrame {
-
-    /**
-     * Creates new form AppFrame
-     */
+    private final KasaService kasaService;
     public AppFrame() {
+        this.kasaService = new KasaService();
         this.layout = new java.awt.CardLayout();
         initComponents();
         setLocationRelativeTo(null);
@@ -25,7 +25,8 @@ public class AppFrame extends javax.swing.JFrame {
         layout.show(layoutPanel, "card2");
         
     }
-   
+  
+    
     
     private void reInitCardLayout(){
         layoutPanel.add(startingPanel, "card2");
@@ -270,6 +271,11 @@ public class AppFrame extends javax.swing.JFrame {
                 productCodeTextFieldFocusLost(evt);
             }
         });
+        productCodeTextField.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                productCodeTextFieldActionPerformed(evt);
+            }
+        });
 
         searchForProductButton.setText("Wyszukaj");
         searchForProductButton.addActionListener(new java.awt.event.ActionListener() {
@@ -429,6 +435,7 @@ public class AppFrame extends javax.swing.JFrame {
 
     private void startCheckoutActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_startCheckoutActionPerformed
         System.out.println("Zaczynam kasowanie");
+        refreshBasketTable();
         layout.show(layoutPanel, "card3");
     }//GEN-LAST:event_startCheckoutActionPerformed
 
@@ -452,32 +459,66 @@ public class AppFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_englishLanguageButtonActionPerformed
 
     private void addProductManuallyActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addProductManuallyActionPerformed
-        if(productNameLabel.getText().isEmpty())
-            return;
-        int retval = Integer.parseInt(JOptionPane.showInputDialog("Podaj ilosc produktów"));
-        if(retval < 1){
-            JOptionPane.showMessageDialog(null, "Podaj poprawną ilość produktów", "Blad", JOptionPane.ERROR_MESSAGE);
-            return;
+        String code = productCodeTextField.getText().trim();
+        try {
+            kasaService.dodajPoKodzieLubTagu(code);
+            JOptionPane.showMessageDialog(this, "Dodano produkt: " + code);
+            productCodeTextField.setText("");
+            refreshBasketTable();
+            layout.show(layoutPanel, "card3");
+        } catch (IllegalArgumentException ex) {
+            JOptionPane.showMessageDialog(this, "Błąd: " + ex.getMessage());
         }
-        System.out.println("Podano ilosc: " + retval);
-        System.out.println("Pytam o ilosc, dodaje produkt i cofam do koszyka");
-        layout.show(layoutPanel, "card3");
     }//GEN-LAST:event_addProductManuallyActionPerformed
 
     private void backToBasketFromManualEntryButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_backToBasketFromManualEntryButtonActionPerformed
         System.out.println("Cofam do panelu koszyka");
+        refreshBasketTable();
         layout.show(layoutPanel, "card3");
+        refreshBasketTable();
     }//GEN-LAST:event_backToBasketFromManualEntryButtonActionPerformed
 
     private void gotoManualEntryButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_gotoManualEntryButtonActionPerformed
         System.out.println("Przechodze do panelu manualnego dodawania produktu");
+        refreshBasketTable();
         layout.show(layoutPanel, "card4");
     }//GEN-LAST:event_gotoManualEntryButtonActionPerformed
 
     private void searchForProductButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_searchForProductButtonActionPerformed
-        if(productCodeTextField.getText().equals("Wprowadź kod produktu"))
+        String partial = productCodeTextField.getText().trim();
+        if (partial.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Wpisz fragment kodu kreskowego.");
             return;
-        System.out.println("Sprawdzam czy produkt jest w bazie");
+        }
+
+        List<Produkt> wyniki = kasaService.szukajPoFragmencieKodu(partial);
+        if (wyniki.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Brak wyników.");
+            return;
+        }
+
+        Produkt selected = (Produkt) JOptionPane.showInputDialog(
+            this,
+            "Wybierz produkt:",
+            "Wyniki wyszukiwania",
+            JOptionPane.PLAIN_MESSAGE,
+            null,
+            wyniki.toArray(),
+            wyniki.get(0)
+        );
+
+            if (selected != null) {
+            kasaService.dodajPoKodzieLubTagu(selected.getKodKreskowy());
+            productCodeTextField.setText("");
+            refreshBasketTable();
+            layout.show(layoutPanel, "card3");
+            JOptionPane.showMessageDialog(
+                this,
+                "Dodano produkt: " + selected.getNazwa(),
+                "Informacja",
+                JOptionPane.INFORMATION_MESSAGE
+            );
+        }
     }//GEN-LAST:event_searchForProductButtonActionPerformed
 
     private void callHelpButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_callHelpButton2ActionPerformed
@@ -501,19 +542,63 @@ public class AppFrame extends javax.swing.JFrame {
 
     private void payByCashButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_payByCashButtonActionPerformed
         System.out.println("Place Gotowka");
-        layout.show(layoutPanel, "card2");
+        try {
+            Transakcja transakcja = kasaService.finalizujTransakcje("Gotówka");
+            ReceiptGenerator.generateAndSaveReceipt(this, transakcja, "Gotówka");
+            refreshBasketTable();
+            layout.show(layoutPanel, "card2");
+        } catch (IllegalStateException ex) {
+            JOptionPane.showMessageDialog(this, "Koszyk jest pusty!", "Błąd", JOptionPane.ERROR_MESSAGE);
+        }
     }//GEN-LAST:event_payByCashButtonActionPerformed
 
     private void payByCardButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_payByCardButtonActionPerformed
         System.out.println("Place Karta");
-        layout.show(layoutPanel, "card2");
+        try {
+            Transakcja transakcja = kasaService.finalizujTransakcje("Karta");
+            ReceiptGenerator.generateAndSaveReceipt(this, transakcja, "Karta");
+            refreshBasketTable();
+            layout.show(layoutPanel, "card2");
+        } catch (IllegalStateException ex) {
+            JOptionPane.showMessageDialog(this, "Koszyk jest pusty!", "Błąd", JOptionPane.ERROR_MESSAGE);
+        }
     }//GEN-LAST:event_payByCardButtonActionPerformed
+
+    private void productCodeTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_productCodeTextFieldActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_productCodeTextFieldActionPerformed
 
     
     private void callHelpFunction(){
         System.out.println("Wezwano pomoc");
         JOptionPane.showMessageDialog(paymentPanel, "Wezwano pomoc - prosze czekac na obsluge", "Wezwano pomoc", HEIGHT);
     }
+    private void refreshBasketTable() {
+        javax.swing.table.DefaultTableModel model = (javax.swing.table.DefaultTableModel) jTable1.getModel();
+        model.setRowCount(0); // Czyści tabelę
+
+        java.util.Map<String, Integer> ilosci = new java.util.HashMap<>();
+        java.util.Map<String, Produkt> produktyMap = new java.util.HashMap<>();
+        java.math.BigDecimal suma = java.math.BigDecimal.ZERO;
+
+        for (Produkt p : kasaService.getKoszyk()) {
+            String kod = p.getKodKreskowy();
+            ilosci.put(kod, ilosci.getOrDefault(kod, 0) + 1);
+            produktyMap.putIfAbsent(kod, p);
+        }
+
+        for (String kod : ilosci.keySet()) {
+            Produkt p = produktyMap.get(kod);
+            int qty = ilosci.get(kod);
+            java.math.BigDecimal razem = p.getCena().multiply(java.math.BigDecimal.valueOf(qty));
+            suma = suma.add(razem);
+
+            model.addRow(new Object[]{p.getNazwa(), qty, razem});
+        }
+
+        jLabel2.setText(suma + " PLN");
+    }
+
     
     
     // Variables declaration - do not modify//GEN-BEGIN:variables

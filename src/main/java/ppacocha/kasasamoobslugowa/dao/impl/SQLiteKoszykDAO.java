@@ -85,4 +85,18 @@ public class SQLiteKoszykDAO implements KoszykDAO {
             e.printStackTrace();
         }
     }
+    
+    @Override
+    public void addProduct(Produkt produkt) {
+        String sql = "INSERT INTO koszyk(kod_kreskowy, ilosc) VALUES (?, 1) ON CONFLICT(kod_kreskowy) DO UPDATE SET ilosc = ilosc + 1";
+        try (Connection conn = DriverManager.getConnection(URL);
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, produkt.getKodKreskowy());
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+    
+
 }
