@@ -544,7 +544,7 @@ public class AppFrame extends javax.swing.JFrame {
         System.out.println("Place Gotowka");
         try {
             Transakcja transakcja = kasaService.finalizujTransakcje("Gotówka");
-            ReceiptGenerator.generateAndSaveReceipt(this, transakcja, "Gotówka");
+            ReceiptGenerator.generateAndSaveReceipt(this, transakcja);
             refreshBasketTable();
             layout.show(layoutPanel, "card2");
         } catch (IllegalStateException ex) {
@@ -556,7 +556,7 @@ public class AppFrame extends javax.swing.JFrame {
         System.out.println("Place Karta");
         try {
             Transakcja transakcja = kasaService.finalizujTransakcje("Karta");
-            ReceiptGenerator.generateAndSaveReceipt(this, transakcja, "Karta");
+            ReceiptGenerator.generateAndSaveReceipt(this, transakcja);
             refreshBasketTable();
             layout.show(layoutPanel, "card2");
         } catch (IllegalStateException ex) {

@@ -9,20 +9,28 @@ public class Produkt {
   private String kodKreskowy;
   private String nfcTag;
   private int ilosc;
+  private BigDecimal vatRate;
 
 
-  public Produkt(String nazwa, BigDecimal cena, String kodKreskowy, String nfcTag, int ilosc) {
-    this.nazwa = nazwa;
-    this.cena = cena;
-    this.kodKreskowy = kodKreskowy;
-    this.nfcTag = nfcTag;
-    this.ilosc = ilosc;
-    }
+  public Produkt(String nazwa, BigDecimal cena, String kodKreskowy,
+                   String nfcTag, int ilosc, BigDecimal vatRate) {
+        this.nazwa       = nazwa;
+        this.cena        = cena;
+        this.kodKreskowy = kodKreskowy;
+        this.nfcTag      = nfcTag;
+        this.ilosc       = ilosc;
+        this.vatRate     = vatRate;
+  }
+  public Produkt(String nazwa, BigDecimal cena, String kodKreskowy, String nfcTag) {
+        this(nazwa, cena, kodKreskowy, nfcTag, 0, BigDecimal.valueOf(0.23));
+  }
 
   public String getNazwa() {
     return nazwa;
   }
-
+  public BigDecimal getVatRate() {
+        return vatRate;
+    }
   public void setNazwa(String nazwa) {
     this.nazwa = nazwa;
   }
@@ -66,7 +74,7 @@ public class Produkt {
 
   @Override
   public String toString() {
-    return nazwa + " (" + cena + ")";
+      return nazwa + " (" + kodKreskowy + ")";
   }
 
     public int getIlosc() {

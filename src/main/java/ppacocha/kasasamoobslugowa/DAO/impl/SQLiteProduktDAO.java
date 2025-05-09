@@ -12,7 +12,8 @@ public class SQLiteProduktDAO implements ProduktDAO {
 
     @Override
     public Produkt findById(String kodKreskowy) {
-        String sql = "SELECT nazwa, cena, nfc_tag, ilosc FROM produkt WHERE kod_kreskowy = ?";
+        String sql = "SELECT nazwa, cena, nfc_tag, ilosc, vat_rate "
+                   + "FROM produkt WHERE kod_kreskowy = ?";
         try (Connection conn = DriverManager.getConnection(URL);
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, kodKreskowy);
@@ -23,11 +24,12 @@ public class SQLiteProduktDAO implements ProduktDAO {
                         rs.getBigDecimal("cena"),
                         kodKreskowy,
                         rs.getString("nfc_tag"),
-                        rs.getInt("ilosc")
+                        rs.getInt("ilosc"),
+                        rs.getBigDecimal("vat_rate")
                     );
                 }
             }
-        } catch (SQLException e) {
+    } catch (SQLException e) {
             e.printStackTrace();
         }
         return null;
@@ -36,7 +38,7 @@ public class SQLiteProduktDAO implements ProduktDAO {
     @Override
     public List<Produkt> findAll() {
         List<Produkt> list = new ArrayList<>();
-        String sql = "SELECT kod_kreskowy, nazwa, cena, nfc_tag, ilosc FROM produkt";
+        String sql = "SELECT kod_kreskowy, nazwa, cena, nfc_tag, ilosc, vat_rate FROM produkt";
         try (Connection conn = DriverManager.getConnection(URL);
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery(sql)) {
@@ -46,10 +48,11 @@ public class SQLiteProduktDAO implements ProduktDAO {
                     rs.getBigDecimal("cena"),
                     rs.getString("kod_kreskowy"),
                     rs.getString("nfc_tag"),
-                    rs.getInt("ilosc")
+                    rs.getInt("ilosc"),
+                    rs.getBigDecimal("vat_rate")
                 ));
             }
-        } catch (SQLException e) {
+    } catch (SQLException e) {
             e.printStackTrace();
         }
         return list;
@@ -112,7 +115,8 @@ public class SQLiteProduktDAO implements ProduktDAO {
                         rs.getBigDecimal("cena"),
                         rs.getString("kod_kreskowy"),
                         nfcTag,
-                        rs.getInt("ilosc")
+                        rs.getInt("ilosc"),
+                        rs.getBigDecimal("vat_rate")
                     );
                 }
             }
@@ -125,7 +129,8 @@ public class SQLiteProduktDAO implements ProduktDAO {
     @Override
     public List<Produkt> findByPartialCode(String partialCode) {
         List<Produkt> list = new ArrayList<>();
-        String sql = "SELECT kod_kreskowy, nazwa, cena, nfc_tag, ilosc FROM produkt WHERE kod_kreskowy LIKE ?";
+        String sql = "SELECT kod_kreskowy, nazwa, cena, nfc_tag, ilosc, vat_rate "
+                   + "FROM produkt WHERE kod_kreskowy LIKE ?";
         try (Connection conn = DriverManager.getConnection(URL);
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, "%" + partialCode + "%");
@@ -136,11 +141,12 @@ public class SQLiteProduktDAO implements ProduktDAO {
                         rs.getBigDecimal("cena"),
                         rs.getString("kod_kreskowy"),
                         rs.getString("nfc_tag"),
-                        rs.getInt("ilosc")
+                        rs.getInt("ilosc"),
+                        rs.getBigDecimal("vat_rate")
                     ));
                 }
             }
-        } catch (SQLException e) {
+    } catch (SQLException e) {
             e.printStackTrace();
         }
         return list;
