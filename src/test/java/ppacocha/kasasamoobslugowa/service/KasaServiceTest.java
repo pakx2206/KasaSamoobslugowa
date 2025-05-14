@@ -1,89 +1,148 @@
 package ppacocha.kasasamoobslugowa.service;
 
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import ppacocha.kasasamoobslugowa.service.KasaService; 
+import org.junit.jupiter.api.io.TempDir;
 import ppacocha.kasasamoobslugowa.model.Produkt;
-import ppacocha.kasasamoobslugowa.model.Transakcja;
-                       
-import ppacocha.kasasamoobslugowa.dao.impl.SQLiteProduktDAO;             
 
 import java.math.BigDecimal;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.nio.file.Paths;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.Statement;
+import java.nio.file.*;
+import java.sql.*;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-import ppacocha.kasasamoobslugowa.dao.ProduktDAO;
+import org.junit.jupiter.api.Test;
 
-public class KasaServiceTest {
+class KasaServiceTest {
+
+    @TempDir
+    Path tempDir;
+
     private KasaService kasa;
 
     @BeforeEach
     void setUp() throws Exception {
-        Files.deleteIfExists(Paths.get("kasa.db"));
+        Path testDb = tempDir.resolve("kasa.db");
+        String url = "jdbc:sqlite:" + testDb.toAbsolutePath();
+        try (Connection conn = DriverManager.getConnection(url);
+             Statement stmt = conn.createStatement()) {
 
-        String sql = Files.readString(
-            Paths.get("src/main/resources/schema.sql"),
-            StandardCharsets.UTF_8
-        );
-        try (Connection conn = DriverManager.getConnection("jdbc:sqlite:kasa.db");
-             Statement st  = conn.createStatement()) {
-            st.executeUpdate(sql);
+            stmt.executeUpdate("PRAGMA foreign_keys = ON;");
+
+            stmt.executeUpdate("DROP TABLE IF EXISTS produkt;");
+            stmt.executeUpdate("""
+                CREATE TABLE produkt (
+                  kod_kreskowy TEXT PRIMARY KEY,
+                  nazwa        TEXT NOT NULL,
+                  cena         REAL NOT NULL,
+                  nfc_tag      TEXT,
+                  ilosc        INTEGER NOT NULL DEFAULT 0,
+                  vat_rate     REAL    NOT NULL DEFAULT 0.23
+                );
+            """);
+            stmt.executeUpdate("""
+                INSERT INTO produkt(kod_kreskowy, nazwa, cena, nfc_tag, ilosc, vat_rate)
+                VALUES('P1','TestProd',5.00,'TAG1',5,0.10);
+            """);
+
+            stmt.executeUpdate("DROP TABLE IF EXISTS koszyk;");
+            stmt.executeUpdate("""
+                CREATE TABLE koszyk (
+                  kod_kreskowy TEXT PRIMARY KEY,
+                  ilosc        INTEGER NOT NULL
+                );
+            """);
+
+            stmt.executeUpdate("DROP TABLE IF EXISTS transakcja_produkt;");
+            stmt.executeUpdate("DROP TABLE IF EXISTS transakcja;");
+
+            stmt.executeUpdate("""
+                CREATE TABLE transakcja (
+                  id INTEGER PRIMARY KEY AUTOINCREMENT,
+                  suma REAL,
+                  typ_platnosci TEXT,
+                  data TEXT
+                );
+            """);
+
+            stmt.executeUpdate("""
+                CREATE TABLE transakcja_produkt (
+                  transakcja_id     INTEGER,
+                  kod_kreskowy      TEXT,
+                  ilosc             INTEGER NOT NULL,
+                  cena_jednostkowa  REAL NOT NULL
+                );
+            """);
         }
 
-        ProduktDAO dao = new SQLiteProduktDAO();
-        dao.save(new Produkt("X", new BigDecimal("1.00"), "333", "TAG3"));
-        dao.save(new Produkt("Y", new BigDecimal("2.00"), "444", "TAG4"));
-        dao.save(new Produkt("Z", new BigDecimal("5.00"), "555", "TAG5"));
-
+        Files.copy(testDb, Paths.get("kasa.db"), StandardCopyOption.REPLACE_EXISTING);
         kasa = new KasaService();
     }
 
     @Test
-    void testDodajIUsunProdukt() {
-        kasa.dodajPoKodzieLubTagu("333");
-        List<Produkt> koszyk1 = kasa.getKoszyk();
-        assertTrue(
-            koszyk1.stream().anyMatch(p -> p.getKodKreskowy().equals("333")),
-            "Koszyk powinien zawierać produkt o kodzie 333"
+    void testDodajPoKodzieLubTaguNieistniejacyProdukt() {
+        IllegalArgumentException ex = assertThrows(
+            IllegalArgumentException.class,
+            () -> kasa.dodajPoKodzieLubTagu("UNKNOWN")
         );
-
-        kasa.usunPoKodzie("333");
-        List<Produkt> koszyk2 = kasa.getKoszyk();
-        assertFalse(
-            koszyk2.stream().anyMatch(p -> p.getKodKreskowy().equals("333")),
-            "Koszyk nie powinien zawierać produktu o kodzie 333 po usunięciu"
-        );
+        assertTrue(ex.getMessage().toLowerCase().contains("nie istnieje"));
     }
 
     @Test
-    void testZmienIlosc() {
-        kasa.dodajPoKodzieLubTagu("444");
-        kasa.zmienIloscPoKodzie("444", 3);
+    void testDodajPoKodzieLubTaguProduktDostepny() {
+        kasa.dodajPoKodzieLubTagu("P1");
         List<Produkt> koszyk = kasa.getKoszyk();
-        assertEquals(
-            3, koszyk.size(),
-            "Koszyk powinien zawierać 3 sztuki produktu o kodzie 444"
-        );
+        assertFalse(koszyk.isEmpty());
+        assertEquals("P1", koszyk.get(0).getKodKreskowy());
     }
 
     @Test
-    void testFinalizujTransakcje() {
-        kasa.dodajPoKodzieLubTagu("555");
-        Transakcja t = kasa.finalizujTransakcje();
-        assertEquals(
-            new BigDecimal("5.00"),
-            t.getSuma(),
-            "Suma transakcji powinna być równa cenie jednego produktu Z"
+    void testUsunPoKodzie() {
+        kasa.dodajPoKodzieLubTagu("P1");
+        kasa.usunPoKodzie("P1");
+        assertTrue(kasa.getKoszyk().isEmpty());
+    }
+
+    @Test
+    void testZmienIloscPoKodzieNaZeroKasuje() {
+        kasa.dodajPoKodzieLubTagu("P1");
+        kasa.zmienIloscPoKodzie("P1", 0);
+        assertTrue(kasa.getKoszyk().isEmpty());
+    }
+
+    @Test
+    void testZmienIloscPoKodzieNaWiecej() {
+        kasa.dodajPoKodzieLubTagu("P1");
+        kasa.dodajPoKodzieLubTagu("P1");
+        kasa.zmienIloscPoKodzie("P1", 3);
+        long count = kasa.getKoszyk().stream()
+                         .filter(p -> p.getKodKreskowy().equals("P1"))
+                         .count();
+        assertEquals(3, count);
+    }
+
+    @Test
+    void testFinalizujTransakcjePustyKoszyk() {
+        IllegalStateException ex = assertThrows(
+            IllegalStateException.class,
+            () -> kasa.finalizujTransakcje("CASH")
         );
-        assertTrue(
-            kasa.getKoszyk().isEmpty(),
-            "Po finalizacji koszyk powinien być pusty"
-        );
+        assertTrue(ex.getMessage().toLowerCase().contains("koszyk jest pusty"));
+    }
+
+    @Test
+    void testFinalizujTransakcjePoprawnie() {
+        kasa.dodajPoKodzieLubTagu("P1");
+        var tx = kasa.finalizujTransakcje("CARD");
+        assertNotNull(tx, "Transakcja nie może być null");
+        assertEquals(0, tx.getSuma().compareTo(new BigDecimal("5.00")), "Suma transakcji powinna być 5.00");
+        assertTrue(kasa.getKoszyk().isEmpty());
+        assertEquals("CARD", tx.getTypPlatnosci());
+    }
+
+    @Test
+    void testSzukajPoFragmencieKodu() {
+        var wyn = kasa.szukajPoFragmencieKodu("P");
+        assertEquals(1, wyn.size());
+        assertEquals("P1", wyn.get(0).getKodKreskowy());
     }
 }

@@ -3,10 +3,11 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
  */
 package ppacocha.kasasamoobslugowa.ui;
-
+import ppacocha.kasasamoobslugowa.nfc.CardReaderNdef;
 import java.awt.CardLayout;
 import java.util.List;
 import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
 import ppacocha.kasasamoobslugowa.model.Produkt;
 import ppacocha.kasasamoobslugowa.model.Transakcja;
 import ppacocha.kasasamoobslugowa.service.KasaService;
@@ -15,6 +16,8 @@ import ppacocha.kasasamoobslugowa.util.ReceiptGenerator;
 
 public class AppFrame extends javax.swing.JFrame {
     private final KasaService kasaService;
+    private Thread nfcThread;
+    private CardReaderNdef reader; 
     public AppFrame() {
         this.kasaService = new KasaService();
         this.layout = new java.awt.CardLayout();
@@ -23,7 +26,15 @@ public class AppFrame extends javax.swing.JFrame {
         reInitCardLayout();
                 
         layout.show(layoutPanel, "card2");
-        
+        try {
+            reader = new CardReaderNdef();
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this,
+                "Nie można uruchomić czytnika NFC:\n" + e.getMessage(),
+                "Błąd NFC", JOptionPane.ERROR_MESSAGE);
+            reader = null;
+        }
+
     }
   
     
@@ -437,6 +448,37 @@ public class AppFrame extends javax.swing.JFrame {
         System.out.println("Zaczynam kasowanie");
         refreshBasketTable();
         layout.show(layoutPanel, "card3");
+
+        if (reader != null && (nfcThread == null || !nfcThread.isAlive())) {
+            nfcThread = new Thread(() -> {
+                while (true) {
+                    try {
+                        String tag = reader.readTextRecord();
+                        SwingUtilities.invokeLater(() -> {
+                            try {
+                                kasaService.dodajPoKodzieLubTagu(tag);
+                                refreshBasketTable();
+                                JOptionPane.showMessageDialog(
+                                    this,
+                                    "Zeskanowano NFC: " + tag,
+                                    "NFC", JOptionPane.INFORMATION_MESSAGE
+                                );
+                            } catch (Exception ex) {
+                                JOptionPane.showMessageDialog(
+                                    this,
+                                    "Błąd NFC: " + ex.getMessage(),
+                                    "Błąd", JOptionPane.ERROR_MESSAGE
+                                );
+                            }
+                        });
+                    } catch (Exception e) {
+                    }
+                }
+            }, "NFC-Scanner-Thread");
+            nfcThread.setDaemon(true);
+            nfcThread.start();
+        }
+
     }//GEN-LAST:event_startCheckoutActionPerformed
 
     private void selectLanguageButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_selectLanguageButtonActionPerformed

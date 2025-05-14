@@ -36,8 +36,7 @@ public class App {
         e.printStackTrace();
     }
 
-    SwingUtilities.invokeLater(() -> {
-            new AppFrame().setVisible(true);
-        });
-  }
+    SwingUtilities.invokeLater(() -> new AppFrame().setVisible(true));
+
+    }
 }

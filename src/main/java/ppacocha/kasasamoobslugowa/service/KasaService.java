@@ -18,12 +18,16 @@ public class KasaService {
     private final TransakcjaDAO transakcjaDao = new SQLiteTransakcjaDAO();
 
     public void dodajPoKodzieLubTagu(String kodLubTag) {
-        Produkt p = produktDao.findById(kodLubTag);
+        String raw = kodLubTag.trim().toUpperCase();
+        if (raw.matches("N\\d+")) {
+            raw = "NFC" + String.format("%03d", Integer.parseInt(raw.substring(1)));
+        }
+        Produkt p = produktDao.findById(raw);
         if (p == null) {
-            p = produktDao.findByNfcTag(kodLubTag);
+            p = produktDao.findByNfcTag(raw);
         }
         if (p == null) {
-            throw new IllegalArgumentException("Produkt o identyfikatorze '" + kodLubTag + "' nie istnieje w bazie");
+            throw new IllegalArgumentException("Produkt o identyfikatorze '" + raw + "' nie istnieje w bazie");
         }
         if (p.getIlosc() <= 0) {
             throw new IllegalArgumentException("Produkt '" + p.getNazwa() + "' jest niedostępny w magazynie.");
@@ -52,14 +56,11 @@ public class KasaService {
         if (items.isEmpty()) {
             throw new IllegalStateException("Koszyk jest pusty — nie można finalizować transakcji");
         }
-
         Transakcja tx = new Transakcja(items, typPlatnosci);
         int id = transakcjaDao.save(tx);
         tx.setId(id);
-
         zmniejszStanPoTransakcji(items);
         koszykDao.clear();
-
         return transakcjaDao.findById(id);
     }
 

@@ -46,26 +46,20 @@ public class MainFrame extends JFrame {
 
     private void initCards() {
         cards.add(buildStartPanel(), "START");
-        cards.add(new ScanPanel(kasaService, this), "SCAN");
         cards.add(new CartPanel(kasaService, this), "CART");
-        
         cardLayout.show(cards, "START");
-    }
+       }
 
-    private JPanel buildStartPanel() {
-        JPanel p = new JPanel(new GridBagLayout());
-        GridBagConstraints c = new GridBagConstraints();
-        c.insets = new Insets(10,10,10,10);
+       private JPanel buildStartPanel() {
+       JPanel p = new JPanel(new GridBagLayout());
+       GridBagConstraints c = new GridBagConstraints();
+       c.insets = new Insets(10,10,10,10);
 
-        JButton btnScan = new JButton("Rozpocznij skanowanie");
-        btnScan.addActionListener(e -> cardLayout.show(cards, "SCAN"));
+       JButton btnCart = new JButton("Przejdź do koszyka");
+       btnCart.addActionListener(e -> cardLayout.show(cards, "CART"));
+       c.gridy = 0; p.add(btnCart, c);
 
-        JButton btnCart = new JButton("Pokaż koszyk");
-        btnCart.addActionListener(e -> cardLayout.show(cards, "CART"));
-
-        c.gridy = 0; p.add(btnScan, c);
-        c.gridy = 1; p.add(btnCart, c);
-        return p;
+       return p;
     }
     public CartPanel getCartPanel() {
     return cartPanel;
