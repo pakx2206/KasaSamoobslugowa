@@ -1,6 +1,6 @@
 PRAGMA foreign_keys = ON;
 
-CREATE TABLE produkt (
+CREATE TABLE IF NOT EXISTS produkt (
   kod_kreskowy    TEXT PRIMARY KEY,
   nazwa           TEXT NOT NULL,
   cena            REAL NOT NULL,

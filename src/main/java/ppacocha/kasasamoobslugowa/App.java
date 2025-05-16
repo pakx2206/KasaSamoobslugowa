@@ -6,37 +6,29 @@ import java.sql.SQLException;
 
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.io.IOException;
 import javax.swing.SwingUtilities;
 import ppacocha.kasasamoobslugowa.ui.AppFrame;
 
 public class App {
-  public static void main(String[] args) {
-    try (Connection conn = DriverManager.getConnection("jdbc:sqlite:kasa.db")) {
-      String sql = new String(Files.readAllBytes(Paths.get("src/main/resources/schema.sql")));
-      conn.createStatement().executeUpdate(sql);
-    } catch (IOException | SQLException e) {
-      e.printStackTrace();
-    }
+    public static void main(String[] args) {
+        Path dbPath = Paths.get("kasa.db");
+        boolean firstRun = Files.notExists(dbPath);
 
-    try (Connection conn = DriverManager.getConnection("jdbc:sqlite:kasa.db")) {
-      String sql = new String(Files.readAllBytes(Paths.get("src/main/resources/schema.sql")));
-      conn.createStatement().executeUpdate(sql);
-    } catch (IOException | SQLException e) {
-      e.printStackTrace();
-    }
-    
-    try (Connection conn = DriverManager.getConnection("jdbc:sqlite:kasa.db")) {
-        String seed = new String(
-            Files.readAllBytes(Paths.get("src/main/resources/seed.sql"))
-        );
-        conn.createStatement().executeUpdate(seed);
-        System.out.println("Seed danych załadowany.");
-    } catch (IOException | SQLException e) {
-        e.printStackTrace();
-    }
+        if (firstRun) {
+            try (Connection conn = DriverManager.getConnection("jdbc:sqlite:kasa.db")) {
+                String schema = new String(Files.readAllBytes(Paths.get("src/main/resources/schema.sql")));
+                conn.createStatement().executeUpdate(schema);
 
-    SwingUtilities.invokeLater(() -> new AppFrame().setVisible(true));
+                String seed = new String(Files.readAllBytes(Paths.get("src/main/resources/seed.sql")));
+                conn.createStatement().executeUpdate(seed);
+                System.out.println("Baza danych utworzona i zainicjalizowana.");
+            } catch (IOException | SQLException e) {
+                e.printStackTrace();
+            }
+        }
 
+        SwingUtilities.invokeLater(() -> new AppFrame().setVisible(true));
     }
 }

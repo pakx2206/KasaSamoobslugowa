@@ -12,26 +12,27 @@ import ppacocha.kasasamoobslugowa.model.Produkt;
 import ppacocha.kasasamoobslugowa.model.Transakcja;
 import ppacocha.kasasamoobslugowa.service.KasaService;
 import ppacocha.kasasamoobslugowa.util.ReceiptGenerator;
-
+import ppacocha.kasasamoobslugowa.util.LanguageSetup;
 
 public class AppFrame extends javax.swing.JFrame {
     private final KasaService kasaService;
     private Thread nfcThread;
     private CardReaderNdef reader; 
+    private String PickedLanguage = "pl";
     public AppFrame() {
         this.kasaService = new KasaService();
         this.layout = new java.awt.CardLayout();
         initComponents();
         setLocationRelativeTo(null);
         reInitCardLayout();
-                
+        updateTexts();
         layout.show(layoutPanel, "card2");
         try {
             reader = new CardReaderNdef();
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this,
-                "Nie można uruchomić czytnika NFC:\n" + e.getMessage(),
-                "Błąd NFC", JOptionPane.ERROR_MESSAGE);
+                LanguageSetup.get(PickedLanguage, "NFCScanner.connection.error")+ "\n" + e.getMessage(),
+                LanguageSetup.get(PickedLanguage, "NFCScanner.error"), JOptionPane.ERROR_MESSAGE);
             reader = null;
         }
 
@@ -445,7 +446,7 @@ public class AppFrame extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void startCheckoutActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_startCheckoutActionPerformed
-        System.out.println("Zaczynam kasowanie");
+        System.out.println(LanguageSetup.get(PickedLanguage, "start.scan.console"));
         refreshBasketTable();
         layout.show(layoutPanel, "card3");
 
@@ -453,21 +454,30 @@ public class AppFrame extends javax.swing.JFrame {
             nfcThread = new Thread(() -> {
                 while (true) {
                     try {
-                        String tag = reader.readTextRecord();
+                        String raw = reader.readTextRecord().trim();
+                        System.out.println("DEBUG NFC raw: '" + raw + "'");
+                        String digits = raw.replaceFirst("(?i)^n", "");
+                        if (!digits.matches("\\d+")) {
+                            System.err.println("Unexpected NFC format: " + raw);
+                            continue;
+                        }
+                        int num = Integer.parseInt(digits);
+                        String tag = "NFC" + String.format("%03d", num);
+
                         SwingUtilities.invokeLater(() -> {
                             try {
                                 kasaService.dodajPoKodzieLubTagu(tag);
                                 refreshBasketTable();
                                 JOptionPane.showMessageDialog(
                                     this,
-                                    "Zeskanowano NFC: " + tag,
+                                    LanguageSetup.get(PickedLanguage, "NFCScan.confirmation") + tag,
                                     "NFC", JOptionPane.INFORMATION_MESSAGE
                                 );
                             } catch (Exception ex) {
                                 JOptionPane.showMessageDialog(
                                     this,
-                                    "Błąd NFC: " + ex.getMessage(),
-                                    "Błąd", JOptionPane.ERROR_MESSAGE
+                                    LanguageSetup.get(PickedLanguage, "NFCScanner.error") + ex.getMessage(),
+                                    LanguageSetup.get(PickedLanguage, "error"), JOptionPane.ERROR_MESSAGE
                                 );
                             }
                         });
@@ -482,7 +492,7 @@ public class AppFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_startCheckoutActionPerformed
 
     private void selectLanguageButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_selectLanguageButtonActionPerformed
-        System.out.println("Przechodze do wyboru jezyka");
+        System.out.println(LanguageSetup.get(PickedLanguage, "goTo.languagePanel"));
         layout.show(layoutPanel, "card5");
     }//GEN-LAST:event_selectLanguageButtonActionPerformed
 
@@ -492,11 +502,15 @@ public class AppFrame extends javax.swing.JFrame {
 
     private void polishLanguageButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_polishLanguageButtonActionPerformed
         System.out.println("Wybrano jezyk polski");
+        PickedLanguage = "pl";
+        updateTexts();
         layout.show(layoutPanel, "card2");
     }//GEN-LAST:event_polishLanguageButtonActionPerformed
 
     private void englishLanguageButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_englishLanguageButtonActionPerformed
-        System.out.println("Wybrano jezyk angielski");
+        System.out.println("English language selected");
+        PickedLanguage = "en";
+        updateTexts();
         layout.show(layoutPanel, "card2");
     }//GEN-LAST:event_englishLanguageButtonActionPerformed
 
@@ -504,24 +518,24 @@ public class AppFrame extends javax.swing.JFrame {
         String code = productCodeTextField.getText().trim();
         try {
             kasaService.dodajPoKodzieLubTagu(code);
-            JOptionPane.showMessageDialog(this, "Dodano produkt: " + code);
+            JOptionPane.showMessageDialog(this, LanguageSetup.get(PickedLanguage, "added.product") + code);
             productCodeTextField.setText("");
             refreshBasketTable();
             layout.show(layoutPanel, "card3");
         } catch (IllegalArgumentException ex) {
-            JOptionPane.showMessageDialog(this, "Błąd: " + ex.getMessage());
+            JOptionPane.showMessageDialog(this, LanguageSetup.get(PickedLanguage, "error") + ex.getMessage());
         }
     }//GEN-LAST:event_addProductManuallyActionPerformed
 
     private void backToBasketFromManualEntryButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_backToBasketFromManualEntryButtonActionPerformed
-        System.out.println("Cofam do panelu koszyka");
+        System.out.println(LanguageSetup.get(PickedLanguage, "back.cart"));
         refreshBasketTable();
         layout.show(layoutPanel, "card3");
         refreshBasketTable();
     }//GEN-LAST:event_backToBasketFromManualEntryButtonActionPerformed
 
     private void gotoManualEntryButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_gotoManualEntryButtonActionPerformed
-        System.out.println("Przechodze do panelu manualnego dodawania produktu");
+        System.out.println(LanguageSetup.get(PickedLanguage, "goTo.manual"));
         refreshBasketTable();
         layout.show(layoutPanel, "card4");
     }//GEN-LAST:event_gotoManualEntryButtonActionPerformed
@@ -529,20 +543,20 @@ public class AppFrame extends javax.swing.JFrame {
     private void searchForProductButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_searchForProductButtonActionPerformed
         String partial = productCodeTextField.getText().trim();
         if (partial.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Wpisz fragment kodu kreskowego.");
+            JOptionPane.showMessageDialog(this, LanguageSetup.get(PickedLanguage, "write.barCode"));
             return;
         }
 
         List<Produkt> wyniki = kasaService.szukajPoFragmencieKodu(partial);
         if (wyniki.isEmpty()) {
-            JOptionPane.showMessageDialog(this, "Brak wyników.");
+            JOptionPane.showMessageDialog(this, LanguageSetup.get(PickedLanguage, "no.results"));
             return;
         }
 
         Produkt selected = (Produkt) JOptionPane.showInputDialog(
             this,
-            "Wybierz produkt:",
-            "Wyniki wyszukiwania",
+            LanguageSetup.get(PickedLanguage, "search.choose"),
+            LanguageSetup.get(PickedLanguage, "search.title"),
             JOptionPane.PLAIN_MESSAGE,
             null,
             wyniki.toArray(),
@@ -556,8 +570,8 @@ public class AppFrame extends javax.swing.JFrame {
             layout.show(layoutPanel, "card3");
             JOptionPane.showMessageDialog(
                 this,
-                "Dodano produkt: " + selected.getNazwa(),
-                "Informacja",
+                LanguageSetup.get(PickedLanguage, "added.product") + selected.getNazwa(),
+                LanguageSetup.get(PickedLanguage, "info"),
                 JOptionPane.INFORMATION_MESSAGE
             );
         }
@@ -568,41 +582,41 @@ public class AppFrame extends javax.swing.JFrame {
     }//GEN-LAST:event_callHelpButton2ActionPerformed
 
     private void productCodeTextFieldFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_productCodeTextFieldFocusGained
-        if(productCodeTextField.getText().equals("Wprowadź kod produktu"))
+        if(productCodeTextField.getText().equals(LanguageSetup.get(PickedLanguage, "input.code")))
             productCodeTextField.setText("");
     }//GEN-LAST:event_productCodeTextFieldFocusGained
 
     private void productCodeTextFieldFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_productCodeTextFieldFocusLost
         if(productCodeTextField.getText().equals(""))
-            productCodeTextField.setText("Wprowadź kod produktu");
+            productCodeTextField.setText(LanguageSetup.get(PickedLanguage, "input.code"));
     }//GEN-LAST:event_productCodeTextFieldFocusLost
 
     private void gotoPaymentButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_gotoPaymentButtonActionPerformed
-        System.out.println("Przechodze do platnosci");
+        System.out.println(LanguageSetup.get(PickedLanguage, "goTo.payment"));
         layout.show(layoutPanel, "card6");
     }//GEN-LAST:event_gotoPaymentButtonActionPerformed
 
     private void payByCashButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_payByCashButtonActionPerformed
-        System.out.println("Place Gotowka");
+        System.out.println(LanguageSetup.get(PickedLanguage, "paid.cash"));
         try {
-            Transakcja transakcja = kasaService.finalizujTransakcje("Gotówka");
+            Transakcja transakcja = kasaService.finalizujTransakcje(LanguageSetup.get(PickedLanguage, "cash"));
             ReceiptGenerator.generateAndSaveReceipt(this, transakcja);
             refreshBasketTable();
             layout.show(layoutPanel, "card2");
         } catch (IllegalStateException ex) {
-            JOptionPane.showMessageDialog(this, "Koszyk jest pusty!", "Błąd", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, LanguageSetup.get(PickedLanguage, "empty.cart"), LanguageSetup.get(PickedLanguage, "error"), JOptionPane.ERROR_MESSAGE);
         }
     }//GEN-LAST:event_payByCashButtonActionPerformed
 
     private void payByCardButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_payByCardButtonActionPerformed
-        System.out.println("Place Karta");
+        System.out.println(LanguageSetup.get(PickedLanguage, "paid.card"));
         try {
-            Transakcja transakcja = kasaService.finalizujTransakcje("Karta");
+            Transakcja transakcja = kasaService.finalizujTransakcje(LanguageSetup.get(PickedLanguage, "card"));
             ReceiptGenerator.generateAndSaveReceipt(this, transakcja);
             refreshBasketTable();
             layout.show(layoutPanel, "card2");
         } catch (IllegalStateException ex) {
-            JOptionPane.showMessageDialog(this, "Koszyk jest pusty!", "Błąd", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, LanguageSetup.get(PickedLanguage, "empty.cart"), LanguageSetup.get(PickedLanguage, "error"), JOptionPane.ERROR_MESSAGE);
         }
     }//GEN-LAST:event_payByCardButtonActionPerformed
 
@@ -612,12 +626,12 @@ public class AppFrame extends javax.swing.JFrame {
 
     
     private void callHelpFunction(){
-        System.out.println("Wezwano pomoc");
-        JOptionPane.showMessageDialog(paymentPanel, "Wezwano pomoc - prosze czekac na obsluge", "Wezwano pomoc", HEIGHT);
+        System.out.println(LanguageSetup.get(PickedLanguage, "alarm.help"));
+        JOptionPane.showMessageDialog(paymentPanel, LanguageSetup.get(PickedLanguage, "alarm.help.info"), LanguageSetup.get(PickedLanguage,"alarm.help"), HEIGHT);
     }
     private void refreshBasketTable() {
         javax.swing.table.DefaultTableModel model = (javax.swing.table.DefaultTableModel) jTable1.getModel();
-        model.setRowCount(0); // Czyści tabelę
+        model.setRowCount(0);
 
         java.util.Map<String, Integer> ilosci = new java.util.HashMap<>();
         java.util.Map<String, Produkt> produktyMap = new java.util.HashMap<>();
@@ -671,4 +685,30 @@ public class AppFrame extends javax.swing.JFrame {
     private javax.swing.JPanel startingPanel;
     // End of variables declaration//GEN-END:variables
     private CardLayout layout;
+
+    private void updateTexts() {
+        callHelpButton.setText(       LanguageSetup.get(PickedLanguage, "menu.help"));
+        callHelpButton2.setText(      LanguageSetup.get(PickedLanguage, "menu.help"));
+        selectLanguageButton.setText( LanguageSetup.get(PickedLanguage, "menu.language"));
+        startCheckout.setText(        LanguageSetup.get(PickedLanguage, "start.scan"));
+        gotoManualEntryButton.setText(LanguageSetup.get(PickedLanguage, "cart.manual"));
+        gotoPaymentButton.setText(    LanguageSetup.get(PickedLanguage, "cart.checkout"));
+        backToBasketFromManualEntryButton
+            .setText(LanguageSetup.get(PickedLanguage, "cart.back"));
+        productCodeTextField.setText( LanguageSetup.get(PickedLanguage, "input.code"));
+        searchForProductButton.setText(LanguageSetup.get(PickedLanguage, "search.find"));
+        addProductManually.setText(    LanguageSetup.get(PickedLanguage, "cart.addManual"));
+        payByCashButton.setText(      LanguageSetup.get(PickedLanguage, "payment.cash"));
+        payByCardButton.setText(      LanguageSetup.get(PickedLanguage, "payment.card"));
+        polishLanguageButton.setText( LanguageSetup.get(PickedLanguage, "language.pl"));
+        englishLanguageButton.setText(LanguageSetup.get(PickedLanguage, "language.en"));
+        javax.swing.table.DefaultTableModel model =
+            (javax.swing.table.DefaultTableModel) jTable1.getModel();
+        model.setColumnIdentifiers(new String[] {
+            LanguageSetup.get(PickedLanguage, "column.productName"),
+            LanguageSetup.get(PickedLanguage, "column.quantity"),
+            LanguageSetup.get(PickedLanguage, "column.price")
+        });
+    }
+
 }

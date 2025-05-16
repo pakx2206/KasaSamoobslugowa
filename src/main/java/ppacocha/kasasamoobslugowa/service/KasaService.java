@@ -18,16 +18,16 @@ public class KasaService {
     private final TransakcjaDAO transakcjaDao = new SQLiteTransakcjaDAO();
 
     public void dodajPoKodzieLubTagu(String kodLubTag) {
-        String raw = kodLubTag.trim().toUpperCase();
-        if (raw.matches("N\\d+")) {
-            raw = "NFC" + String.format("%03d", Integer.parseInt(raw.substring(1)));
+        String key = kodLubTag.trim().toUpperCase();
+        if (!key.startsWith("NFC")) {
+            key = "NFC" + key;
         }
-        Produkt p = produktDao.findById(raw);
+        Produkt p = produktDao.findByNfcTag(key);
         if (p == null) {
-            p = produktDao.findByNfcTag(raw);
+            p = produktDao.findById(kodLubTag.trim());
         }
         if (p == null) {
-            throw new IllegalArgumentException("Produkt o identyfikatorze '" + raw + "' nie istnieje w bazie");
+            throw new IllegalArgumentException("Produkt o identyfikatorze '" + key + "' nie istnieje w bazie");
         }
         if (p.getIlosc() <= 0) {
             throw new IllegalArgumentException("Produkt '" + p.getNazwa() + "' jest niedostępny w magazynie.");
