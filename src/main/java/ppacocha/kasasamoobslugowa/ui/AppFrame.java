@@ -600,7 +600,7 @@ public class AppFrame extends javax.swing.JFrame {
         System.out.println(LanguageSetup.get(PickedLanguage, "paid.cash"));
         try {
             Transakcja transakcja = kasaService.finalizujTransakcje(LanguageSetup.get(PickedLanguage, "cash"));
-            ReceiptGenerator.generateAndSaveReceipt(this, transakcja);
+            ReceiptGenerator.generateAndSaveReceipt(this, transakcja, PickedLanguage);
             refreshBasketTable();
             layout.show(layoutPanel, "card2");
         } catch (IllegalStateException ex) {
@@ -612,7 +612,7 @@ public class AppFrame extends javax.swing.JFrame {
         System.out.println(LanguageSetup.get(PickedLanguage, "paid.card"));
         try {
             Transakcja transakcja = kasaService.finalizujTransakcje(LanguageSetup.get(PickedLanguage, "card"));
-            ReceiptGenerator.generateAndSaveReceipt(this, transakcja);
+            ReceiptGenerator.generateAndSaveReceipt(this, transakcja, PickedLanguage);
             refreshBasketTable();
             layout.show(layoutPanel, "card2");
         } catch (IllegalStateException ex) {

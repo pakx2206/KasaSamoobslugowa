@@ -16,8 +16,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.List;
 import java.util.stream.Collectors;
-import ppacocha.kasasamoobslugowa.dao.ProduktDAO;
-import ppacocha.kasasamoobslugowa.dao.impl.SQLiteProduktDAO;
 
 public class ReceiptGenerator {
     private static final boolean AUTO_PRINT = false;
@@ -31,10 +29,10 @@ public class ReceiptGenerator {
     private static final String CURRENCY      = "PLN";
     private static final DateTimeFormatter DT_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
-    public static void generateAndSaveReceipt(JFrame parent, Transakcja tx) {
+    public static void generateAndSaveReceipt(JFrame parent, Transakcja tx, String currentLanguage) {
         String buyerNip = JOptionPane.showInputDialog(
             parent,
-            "Wprowadź NIP nabywcy (opcjonalnie):",
+            LanguageSetup.get(currentLanguage, "nip"),
             "Paragon fiskalny",
             JOptionPane.QUESTION_MESSAGE
         );
@@ -45,7 +43,7 @@ public class ReceiptGenerator {
         try {
             Path folder = Path.of("paragony");
             if (!Files.exists(folder)) Files.createDirectories(folder);
-            Path file = folder.resolve("paragon_" + String.format("%08d", tx.getId()) + ".png");
+            Path file = folder.resolve("paragon_" + String.format("%s", tx.getId()) + ".png");
             ImageIO.write(img, "png", file.toFile());
 
             JOptionPane.showMessageDialog(parent, new JLabel(new ImageIcon(img)), "Paragon fiskalny", JOptionPane.PLAIN_MESSAGE);
@@ -68,7 +66,7 @@ public class ReceiptGenerator {
     private static List<String> buildReceiptLines(Transakcja tx, String buyerNip) {
         List<String> out = new ArrayList<>();
         out.add("PARAGON FISKALNY");
-        out.add(String.format("Nr: %08d   %s", tx.getId(), DT_FMT.format(tx.getData())));
+        out.add(String.format("Nr: %s   %s", tx.getId(), DT_FMT.format(tx.getData())));
         out.add(String.format("Sprzedawca: %s", STORE_NAME));
         out.add(String.format("Adres: %s", STORE_ADDRESS));
         out.add(String.format("NIP sprzedawcy: %s", TAXPAYER_NIP));
@@ -109,7 +107,7 @@ public class ReceiptGenerator {
         out.add(String.format("SUMA PTU:%29.2f", totalTax));
         out.add(repeat('=', 40));
 
-        out.add(String.format("ID transakcji: %08d", tx.getId()));
+        out.add(String.format("ID transakcji: %s", tx.getId()));
         if (buyerNip!=null && !buyerNip.isBlank())
             out.add("NIP nabywcy: " + buyerNip);
         out.add("UID: " + FISCAL_UID);

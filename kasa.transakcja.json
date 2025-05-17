@@ -1,0 +1,65 @@
+[{
+  "_id": {
+    "$oid": "68290e0fe3a3ab605609d3fc"
+  },
+  "data": "2025-05-18T00:30:39.1867208",
+  "suma": 39.49,
+  "typ_platnosci": "Gotówka",
+  "produkty": [
+    {
+      "kod_kreskowy": "5901234124004",
+      "ilosc": 1,
+      "cena_jednostkowa": 24.5
+    },
+    {
+      "kod_kreskowy": "5901234124001",
+      "ilosc": 1,
+      "cena_jednostkowa": 14.99
+    }
+  ]
+},
+{
+  "_id": {
+    "$oid": "68290e471e3a882254e81ab0"
+  },
+  "data": "2025-05-18T00:31:35.769009",
+  "suma": 14.99,
+  "typ_platnosci": "Gotówka",
+  "produkty": [
+    {
+      "kod_kreskowy": "5901234124001",
+      "ilosc": 1,
+      "cena_jednostkowa": 14.99
+    }
+  ]
+},
+{
+  "_id": {
+    "$oid": "68290ee7e8f6912e4145b7b9"
+  },
+  "data": "2025-05-18T00:34:15.8532508",
+  "suma": 14.99,
+  "typ_platnosci": "Karta",
+  "produkty": [
+    {
+      "kod_kreskowy": "5901234124001",
+      "ilosc": 1,
+      "cena_jednostkowa": 14.99
+    }
+  ]
+},
+{
+  "_id": {
+    "$oid": "68290f1786371f78e0e18c67"
+  },
+  "data": "2025-05-18T00:35:03.7425456",
+  "suma": 14.99,
+  "typ_platnosci": "Gotówka",
+  "produkty": [
+    {
+      "kod_kreskowy": "5901234124001",
+      "ilosc": 1,
+      "cena_jednostkowa": 14.99
+    }
+  ]
+}]

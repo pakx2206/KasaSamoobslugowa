@@ -1,13 +1,13 @@
 package ppacocha.kasasamoobslugowa.service;
 
-import ppacocha.kasasamoobslugowa.dao.impl.SQLiteTransakcjaDAO;
+import ppacocha.kasasamoobslugowa.dao.impl.MongoTransakcjaDAO;
 import ppacocha.kasasamoobslugowa.model.Transakcja;
 import java.util.List;
 import java.math.BigDecimal;
 import ppacocha.kasasamoobslugowa.dao.TransakcjaDAO;
 
 public class RaportService {
-    private final TransakcjaDAO transakcjaDao = new SQLiteTransakcjaDAO();
+    private final TransakcjaDAO transakcjaDao = new MongoTransakcjaDAO();
 
     public String generujRaportDzienny() {
         List<Transakcja> transakcje = transakcjaDao.findAll();

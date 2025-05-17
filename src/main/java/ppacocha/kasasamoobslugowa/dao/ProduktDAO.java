@@ -11,5 +11,5 @@ public interface ProduktDAO {
     void update(Produkt produkt);
     void delete(String kodKreskowy);
     List<Produkt> findByPartialCode(String partialCode);
-
+    void zmniejszStan(String kodKreskowy, int amount);
 }

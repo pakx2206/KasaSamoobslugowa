@@ -6,34 +6,41 @@ import java.util.Map;
 import ppacocha.kasasamoobslugowa.dao.KoszykDAO;
 import ppacocha.kasasamoobslugowa.dao.ProduktDAO;
 import ppacocha.kasasamoobslugowa.dao.TransakcjaDAO;
-import ppacocha.kasasamoobslugowa.dao.impl.SQLiteKoszykDAO;
-import ppacocha.kasasamoobslugowa.dao.impl.SQLiteProduktDAO;
-import ppacocha.kasasamoobslugowa.dao.impl.SQLiteTransakcjaDAO;
+import ppacocha.kasasamoobslugowa.dao.impl.*;
 import ppacocha.kasasamoobslugowa.model.Produkt;
 import ppacocha.kasasamoobslugowa.model.Transakcja;
+import ppacocha.kasasamoobslugowa.dao.impl.MongoProduktDAO;
 
 public class KasaService {
-    private final SQLiteProduktDAO produktDao = new SQLiteProduktDAO();
-    private final KoszykDAO koszykDao = new SQLiteKoszykDAO();
-    private final TransakcjaDAO transakcjaDao = new SQLiteTransakcjaDAO();
+    private final MongoProduktDAO produktDao = new MongoProduktDAO();
+    private final KoszykDAO koszykDao = new MongoKoszykDAO();
+    private final TransakcjaDAO transakcjaDao = new MongoTransakcjaDAO();
 
-    public void dodajPoKodzieLubTagu(String kodLubTag) {
-        String key = kodLubTag.trim().toUpperCase();
-        if (!key.startsWith("NFC")) {
-            key = "NFC" + key;
-        }
-        Produkt p = produktDao.findByNfcTag(key);
+    public void dodajPoKodzieLubTagu(String raw) {
+        String code = raw.trim();
+        Produkt p = produktDao.findById(code);
         if (p == null) {
-            p = produktDao.findById(kodLubTag.trim());
+            p = produktDao.findByNfcTag(code);
         }
         if (p == null) {
-            throw new IllegalArgumentException("Produkt o identyfikatorze '" + key + "' nie istnieje w bazie");
+            p = produktDao.findByNfcTag(code.toUpperCase());
+        }
+        if (p == null) {
+            String digits = code.replaceAll("\\D+", "");
+            if (!digits.isEmpty()) {
+                p = produktDao.findByNfcTag("NFC" + digits);
+            }
+        }
+
+        if (p == null) {
+            throw new IllegalArgumentException("Produkt o identyfikatorze '" + raw + "' nie istnieje w bazie");
         }
         if (p.getIlosc() <= 0) {
             throw new IllegalArgumentException("Produkt '" + p.getNazwa() + "' jest niedostępny w magazynie.");
         }
         koszykDao.addProduct(p);
     }
+
 
     public void usunPoKodzie(String kodKreskowy) {
         koszykDao.delete(kodKreskowy);
@@ -52,26 +59,22 @@ public class KasaService {
     }
 
     public Transakcja finalizujTransakcje(String typPlatnosci) {
-        List<Produkt> items = koszykDao.findAll();
-        if (items.isEmpty()) {
+        var items = koszykDao.findAll();
+        if (items.isEmpty())
             throw new IllegalStateException("Koszyk jest pusty — nie można finalizować transakcji");
-        }
+
         Transakcja tx = new Transakcja(items, typPlatnosci);
-        int id = transakcjaDao.save(tx);
+        String id = transakcjaDao.save(tx);
         tx.setId(id);
-        zmniejszStanPoTransakcji(items);
+
+        Map<String, Integer> ilosci = new HashMap<>();
+        for (Produkt p : items)
+            ilosci.merge(p.getKodKreskowy(), 1, Integer::sum);
+        for (var e : ilosci.entrySet())
+            produktDao.zmniejszStan(e.getKey(), e.getValue());
+
         koszykDao.clear();
         return transakcjaDao.findById(id);
-    }
-
-    private void zmniejszStanPoTransakcji(List<Produkt> produkty) {
-        Map<String, Integer> ilosci = new HashMap<>();
-        for (Produkt p : produkty) {
-            ilosci.put(p.getKodKreskowy(), ilosci.getOrDefault(p.getKodKreskowy(), 0) + 1);
-        }
-        for (Map.Entry<String, Integer> entry : ilosci.entrySet()) {
-            produktDao.zmniejszStan(entry.getKey(), entry.getValue());
-        }
     }
 
     public List<Produkt> szukajPoFragmencieKodu(String fragment) {
