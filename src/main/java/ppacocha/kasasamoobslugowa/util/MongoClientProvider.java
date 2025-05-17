@@ -7,7 +7,7 @@ import com.mongodb.client.MongoDatabase;
 import java.util.ArrayList;
 
 public class MongoClientProvider {
-    private static final String URI = "";
+    private static final String URI = MONGO_URL;
     private static final MongoClient client = MongoClients.create(URI);
 
     public static MongoDatabase getDatabase() {
