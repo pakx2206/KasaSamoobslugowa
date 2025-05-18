@@ -1,27 +1,33 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
- */
 package ppacocha.kasasamoobslugowa.ui;
+
 import ppacocha.kasasamoobslugowa.nfc.CardReaderNdef;
-import java.awt.CardLayout;
-import java.util.List;
-import javax.swing.JOptionPane;
-import javax.swing.SwingUtilities;
 import ppacocha.kasasamoobslugowa.model.Produkt;
 import ppacocha.kasasamoobslugowa.model.Transakcja;
 import ppacocha.kasasamoobslugowa.service.KasaService;
+import ppacocha.kasasamoobslugowa.service.RaportService;
+import ppacocha.kasasamoobslugowa.util.PDFReportGenerator;
 import ppacocha.kasasamoobslugowa.util.ReceiptGenerator;
 import ppacocha.kasasamoobslugowa.util.LanguageSetup;
 
-public class AppFrame extends javax.swing.JFrame {
+import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
+import java.awt.*;
+import java.awt.event.*;
+import java.time.LocalDate;
+import java.util.List;
+
+public class AppFrame extends JFrame {
     private final KasaService kasaService;
+    private final RaportService raportService;
     private Thread nfcThread;
-    private CardReaderNdef reader; 
+    private CardReaderNdef reader;
     private String PickedLanguage = "pl";
+    private CardLayout layout;
+    private final JButton printReportButton = new JButton("Drukuj raport");
     public AppFrame() {
-        this.kasaService = new KasaService();
-        this.layout = new java.awt.CardLayout();
+        kasaService = new KasaService();
+        raportService = new RaportService();
+        layout = new CardLayout();
         initComponents();
         setLocationRelativeTo(null);
         reInitCardLayout();
@@ -30,26 +36,66 @@ public class AppFrame extends javax.swing.JFrame {
         try {
             reader = new CardReaderNdef();
         } catch (Exception e) {
-            JOptionPane.showMessageDialog(this,
-                LanguageSetup.get(PickedLanguage, "NFCScanner.connection.error")+ "\n" + e.getMessage(),
-                LanguageSetup.get(PickedLanguage, "NFCScanner.error"), JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(
+                    this,
+                    LanguageSetup.get(PickedLanguage, "NFCScanner.connection.error") + "\n" + e.getMessage(),
+                    LanguageSetup.get(PickedLanguage, "NFCScanner.error"),
+                    JOptionPane.ERROR_MESSAGE
+            );
             reader = null;
         }
-
+        setDefaultCloseOperation(DO_NOTHING_ON_CLOSE);
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                JPasswordField pf = new JPasswordField();
+                int ok = JOptionPane.showConfirmDialog(
+                        AppFrame.this,
+                        pf,
+                        "Podaj hasło personelu:",
+                        JOptionPane.OK_CANCEL_OPTION,
+                        JOptionPane.PLAIN_MESSAGE
+                );
+                if (ok != JOptionPane.OK_OPTION) return;
+                String pass = new String(pf.getPassword());
+                if (!"admin123".equals(pass)) {
+                    JOptionPane.showMessageDialog(
+                            AppFrame.this,
+                            "Nieprawidłowe hasło",
+                            "Błąd",
+                            JOptionPane.ERROR_MESSAGE
+                    );
+                    return;
+                }
+                try {
+                    List<Transakcja> todays = raportService.getTodaysTransactions();
+                    PDFReportGenerator.generateDailyReportPDF(todays);
+                    JOptionPane.showMessageDialog(
+                            AppFrame.this,
+                            "Raport dzienny zapisany jako PDF w folderze 'reports'",
+                            "Gotowe",
+                            JOptionPane.INFORMATION_MESSAGE
+                    );
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(
+                            AppFrame.this,
+                            "Błąd generowania raportu: " + ex.getMessage(),
+                            "Błąd",
+                            JOptionPane.ERROR_MESSAGE
+                    );
+                }
+                dispose();
+                System.exit(0);
+            }
+        });
     }
-  
-    
-    
-    private void reInitCardLayout(){
+
+    private void reInitCardLayout() {
         layoutPanel.add(startingPanel, "card2");
         layoutPanel.add(basketPanel, "card3");
         layoutPanel.add(manualProductEntryPanel, "card4");
         layoutPanel.add(languageSelectionPanel, "card5");
         layoutPanel.add(paymentPanel, "card6");
-        
-        
-    
-    
     }
 
     /**
@@ -208,6 +254,26 @@ public class AppFrame extends javax.swing.JFrame {
         callHelpButton2.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 callHelpButton2ActionPerformed(evt);
+            }
+        });
+        basketPanel.add(printReportButton);
+        printReportButton.addActionListener(e -> {
+            try {
+                List<Transakcja> todays = raportService.getTodaysTransactions();
+                PDFReportGenerator.generateDailyReportPDF(todays);
+                JOptionPane.showMessageDialog(
+                        AppFrame.this,
+                        "Raport zapisany do folderu reports",
+                        "OK",
+                        JOptionPane.INFORMATION_MESSAGE
+                );
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(
+                        AppFrame.this,
+                        "Błąd podczas drukowania: " + ex.getMessage(),
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE
+                );
             }
         });
 
@@ -444,77 +510,100 @@ public class AppFrame extends javax.swing.JFrame {
 
         pack();
     }// </editor-fold>//GEN-END:initComponents
-
-    private void startCheckoutActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_startCheckoutActionPerformed
-        System.out.println(LanguageSetup.get(PickedLanguage, "start.scan.console"));
+    private void callHelpButtonActionPerformed(java.awt.event.ActionEvent evt) {
+        callHelpFunction();
+    }
+    private void callHelpButton2ActionPerformed(java.awt.event.ActionEvent evt) {
+        callHelpFunction();
+    }
+    private void gotoManualEntryButtonActionPerformed(java.awt.event.ActionEvent evt) {
+        System.out.println(LanguageSetup.get(PickedLanguage, "goTo.manual"));
+        refreshBasketTable();
+        layout.show(layoutPanel, "card4");
+    }
+    private void productCodeTextFieldFocusGained(java.awt.event.FocusEvent evt) {
+        if (productCodeTextField.getText().equals(LanguageSetup.get(PickedLanguage,"input.code")))
+            productCodeTextField.setText("");
+    }
+    private void productCodeTextFieldFocusLost(java.awt.event.FocusEvent evt) {
+        if (productCodeTextField.getText().isEmpty())
+            productCodeTextField.setText(LanguageSetup.get(PickedLanguage,"input.code"));
+    }
+    private void productCodeTextFieldActionPerformed(java.awt.event.ActionEvent evt) {
+        addProductManuallyActionPerformed(evt);
+    }
+    private void startCheckoutActionPerformed(ActionEvent evt) {
         refreshBasketTable();
         layout.show(layoutPanel, "card3");
-
         if (reader != null && (nfcThread == null || !nfcThread.isAlive())) {
             nfcThread = new Thread(() -> {
                 while (true) {
                     try {
                         String raw = reader.readTextRecord().trim();
-                        System.out.println("DEBUG NFC raw: '" + raw + "'");
                         String digits = raw.replaceFirst("(?i)^n", "");
-                        if (!digits.matches("\\d+")) {
-                            System.err.println("Unexpected NFC format: " + raw);
-                            continue;
-                        }
-                        int num = Integer.parseInt(digits);
-                        String tag = "NFC" + String.format("%03d", num);
-
+                        if (!digits.matches("\\d+")) continue;
+                        String tag = "NFC" + String.format("%03d", Integer.parseInt(digits));
                         SwingUtilities.invokeLater(() -> {
                             try {
                                 kasaService.dodajPoKodzieLubTagu(tag);
                                 refreshBasketTable();
                                 JOptionPane.showMessageDialog(
-                                    this,
-                                    LanguageSetup.get(PickedLanguage, "NFCScan.confirmation") + tag,
-                                    "NFC", JOptionPane.INFORMATION_MESSAGE
+                                        this,
+                                        LanguageSetup.get(PickedLanguage, "NFCScan.confirmation") + tag,
+                                        "NFC",
+                                        JOptionPane.INFORMATION_MESSAGE
                                 );
                             } catch (Exception ex) {
                                 JOptionPane.showMessageDialog(
-                                    this,
-                                    LanguageSetup.get(PickedLanguage, "NFCScanner.error") + ex.getMessage(),
-                                    LanguageSetup.get(PickedLanguage, "error"), JOptionPane.ERROR_MESSAGE
+                                        this,
+                                        LanguageSetup.get(PickedLanguage, "NFCScanner.error") + ex.getMessage(),
+                                        LanguageSetup.get(PickedLanguage, "error"),
+                                        JOptionPane.ERROR_MESSAGE
                                 );
                             }
                         });
-                    } catch (Exception e) {
-                    }
+                    } catch (Exception ignored) {}
                 }
             }, "NFC-Scanner-Thread");
             nfcThread.setDaemon(true);
             nfcThread.start();
         }
+    }
 
-    }//GEN-LAST:event_startCheckoutActionPerformed
+    private void searchForProductButtonActionPerformed(ActionEvent evt) {
+        String partial = productCodeTextField.getText().trim();
+        if (partial.isEmpty()) {
+            JOptionPane.showMessageDialog(this, LanguageSetup.get(PickedLanguage, "write.barCode"));
+            return;
+        }
+        List<Produkt> wyniki = kasaService.szukajPoFragmencieKodu(partial);
+        if (wyniki.isEmpty()) {
+            JOptionPane.showMessageDialog(this, LanguageSetup.get(PickedLanguage, "no.results"));
+            return;
+        }
+        Produkt selected = (Produkt) JOptionPane.showInputDialog(
+                this,
+                LanguageSetup.get(PickedLanguage, "search.choose"),
+                LanguageSetup.get(PickedLanguage, "search.title"),
+                JOptionPane.PLAIN_MESSAGE,
+                null,
+                wyniki.toArray(),
+                wyniki.get(0)
+        );
+        if (selected != null) {
+            kasaService.dodajPoKodzieLubTagu(selected.getKodKreskowy());
+            refreshBasketTable();
+            JOptionPane.showMessageDialog(
+                    this,
+                    LanguageSetup.get(PickedLanguage, "added.product") + selected.getNazwa(),
+                    LanguageSetup.get(PickedLanguage, "info"),
+                    JOptionPane.INFORMATION_MESSAGE
+            );
+            layout.show(layoutPanel, "card3");
+        }
+    }
 
-    private void selectLanguageButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_selectLanguageButtonActionPerformed
-        System.out.println(LanguageSetup.get(PickedLanguage, "goTo.languagePanel"));
-        layout.show(layoutPanel, "card5");
-    }//GEN-LAST:event_selectLanguageButtonActionPerformed
-
-    private void callHelpButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_callHelpButtonActionPerformed
-        callHelpFunction();
-    }//GEN-LAST:event_callHelpButtonActionPerformed
-
-    private void polishLanguageButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_polishLanguageButtonActionPerformed
-        System.out.println("Wybrano jezyk polski");
-        PickedLanguage = "pl";
-        updateTexts();
-        layout.show(layoutPanel, "card2");
-    }//GEN-LAST:event_polishLanguageButtonActionPerformed
-
-    private void englishLanguageButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_englishLanguageButtonActionPerformed
-        System.out.println("English language selected");
-        PickedLanguage = "en";
-        updateTexts();
-        layout.show(layoutPanel, "card2");
-    }//GEN-LAST:event_englishLanguageButtonActionPerformed
-
-    private void addProductManuallyActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addProductManuallyActionPerformed
+    private void addProductManuallyActionPerformed(ActionEvent evt) {
         String code = productCodeTextField.getText().trim();
         try {
             kasaService.dodajPoKodzieLubTagu(code);
@@ -523,192 +612,134 @@ public class AppFrame extends javax.swing.JFrame {
             refreshBasketTable();
             layout.show(layoutPanel, "card3");
         } catch (IllegalArgumentException ex) {
-            JOptionPane.showMessageDialog(this, LanguageSetup.get(PickedLanguage, "error") + ex.getMessage());
+            JOptionPane.showMessageDialog(this, ex.getMessage(), "Błąd", JOptionPane.ERROR_MESSAGE);
         }
-    }//GEN-LAST:event_addProductManuallyActionPerformed
+    }
 
-    private void backToBasketFromManualEntryButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_backToBasketFromManualEntryButtonActionPerformed
-        System.out.println(LanguageSetup.get(PickedLanguage, "back.cart"));
+    private void gotoPaymentButtonActionPerformed(ActionEvent evt) {
+        layout.show(layoutPanel, "card6");
+    }
+
+    private void payByCashButtonActionPerformed(ActionEvent evt) {
+        try {
+            Transakcja tx = kasaService.finalizujTransakcje(LanguageSetup.get(PickedLanguage, "cash"));
+            ReceiptGenerator.generateAndSaveReceipt(this, tx, PickedLanguage);
+            refreshBasketTable();
+            layout.show(layoutPanel, "card2");
+        } catch (IllegalStateException ex) {
+            JOptionPane.showMessageDialog(this, LanguageSetup.get(PickedLanguage, "empty.cart"), "Błąd", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void payByCardButtonActionPerformed(ActionEvent evt) {
+        try {
+            Transakcja tx = kasaService.finalizujTransakcje(LanguageSetup.get(PickedLanguage, "card"));
+            ReceiptGenerator.generateAndSaveReceipt(this, tx, PickedLanguage);
+            refreshBasketTable();
+            layout.show(layoutPanel, "card2");
+        } catch (IllegalStateException ex) {
+            JOptionPane.showMessageDialog(this, LanguageSetup.get(PickedLanguage, "empty.cart"), "Błąd", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void backToBasketFromManualEntryButtonActionPerformed(ActionEvent evt) {
         refreshBasketTable();
         layout.show(layoutPanel, "card3");
-        refreshBasketTable();
-    }//GEN-LAST:event_backToBasketFromManualEntryButtonActionPerformed
-
-    private void gotoManualEntryButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_gotoManualEntryButtonActionPerformed
-        System.out.println(LanguageSetup.get(PickedLanguage, "goTo.manual"));
-        refreshBasketTable();
-        layout.show(layoutPanel, "card4");
-    }//GEN-LAST:event_gotoManualEntryButtonActionPerformed
-
-    private void searchForProductButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_searchForProductButtonActionPerformed
-        String partial = productCodeTextField.getText().trim();
-        if (partial.isEmpty()) {
-            JOptionPane.showMessageDialog(this, LanguageSetup.get(PickedLanguage, "write.barCode"));
-            return;
-        }
-
-        List<Produkt> wyniki = kasaService.szukajPoFragmencieKodu(partial);
-        if (wyniki.isEmpty()) {
-            JOptionPane.showMessageDialog(this, LanguageSetup.get(PickedLanguage, "no.results"));
-            return;
-        }
-
-        Produkt selected = (Produkt) JOptionPane.showInputDialog(
-            this,
-            LanguageSetup.get(PickedLanguage, "search.choose"),
-            LanguageSetup.get(PickedLanguage, "search.title"),
-            JOptionPane.PLAIN_MESSAGE,
-            null,
-            wyniki.toArray(),
-            wyniki.get(0)
-        );
-
-            if (selected != null) {
-            kasaService.dodajPoKodzieLubTagu(selected.getKodKreskowy());
-            productCodeTextField.setText("");
-            refreshBasketTable();
-            layout.show(layoutPanel, "card3");
-            JOptionPane.showMessageDialog(
-                this,
-                LanguageSetup.get(PickedLanguage, "added.product") + selected.getNazwa(),
-                LanguageSetup.get(PickedLanguage, "info"),
-                JOptionPane.INFORMATION_MESSAGE
-            );
-        }
-    }//GEN-LAST:event_searchForProductButtonActionPerformed
-
-    private void callHelpButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_callHelpButton2ActionPerformed
-        callHelpFunction();
-    }//GEN-LAST:event_callHelpButton2ActionPerformed
-
-    private void productCodeTextFieldFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_productCodeTextFieldFocusGained
-        if(productCodeTextField.getText().equals(LanguageSetup.get(PickedLanguage, "input.code")))
-            productCodeTextField.setText("");
-    }//GEN-LAST:event_productCodeTextFieldFocusGained
-
-    private void productCodeTextFieldFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_productCodeTextFieldFocusLost
-        if(productCodeTextField.getText().equals(""))
-            productCodeTextField.setText(LanguageSetup.get(PickedLanguage, "input.code"));
-    }//GEN-LAST:event_productCodeTextFieldFocusLost
-
-    private void gotoPaymentButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_gotoPaymentButtonActionPerformed
-        System.out.println(LanguageSetup.get(PickedLanguage, "goTo.payment"));
-        layout.show(layoutPanel, "card6");
-    }//GEN-LAST:event_gotoPaymentButtonActionPerformed
-
-    private void payByCashButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_payByCashButtonActionPerformed
-        System.out.println(LanguageSetup.get(PickedLanguage, "paid.cash"));
-        try {
-            Transakcja transakcja = kasaService.finalizujTransakcje(LanguageSetup.get(PickedLanguage, "cash"));
-            ReceiptGenerator.generateAndSaveReceipt(this, transakcja, PickedLanguage);
-            refreshBasketTable();
-            layout.show(layoutPanel, "card2");
-        } catch (IllegalStateException ex) {
-            JOptionPane.showMessageDialog(this, LanguageSetup.get(PickedLanguage, "empty.cart"), LanguageSetup.get(PickedLanguage, "error"), JOptionPane.ERROR_MESSAGE);
-        }
-    }//GEN-LAST:event_payByCashButtonActionPerformed
-
-    private void payByCardButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_payByCardButtonActionPerformed
-        System.out.println(LanguageSetup.get(PickedLanguage, "paid.card"));
-        try {
-            Transakcja transakcja = kasaService.finalizujTransakcje(LanguageSetup.get(PickedLanguage, "card"));
-            ReceiptGenerator.generateAndSaveReceipt(this, transakcja, PickedLanguage);
-            refreshBasketTable();
-            layout.show(layoutPanel, "card2");
-        } catch (IllegalStateException ex) {
-            JOptionPane.showMessageDialog(this, LanguageSetup.get(PickedLanguage, "empty.cart"), LanguageSetup.get(PickedLanguage, "error"), JOptionPane.ERROR_MESSAGE);
-        }
-    }//GEN-LAST:event_payByCardButtonActionPerformed
-
-    private void productCodeTextFieldActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_productCodeTextFieldActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_productCodeTextFieldActionPerformed
-
-    
-    private void callHelpFunction(){
-        System.out.println(LanguageSetup.get(PickedLanguage, "alarm.help"));
-        JOptionPane.showMessageDialog(paymentPanel, LanguageSetup.get(PickedLanguage, "alarm.help.info"), LanguageSetup.get(PickedLanguage,"alarm.help"), HEIGHT);
     }
-    private void refreshBasketTable() {
-        javax.swing.table.DefaultTableModel model = (javax.swing.table.DefaultTableModel) jTable1.getModel();
-        model.setRowCount(0);
 
+    private void selectLanguageButtonActionPerformed(ActionEvent evt) {
+        layout.show(layoutPanel, "card5");
+    }
+
+    private void polishLanguageButtonActionPerformed(ActionEvent evt) {
+        PickedLanguage = "pl";
+        updateTexts();
+        layout.show(layoutPanel, "card2");
+    }
+
+    private void englishLanguageButtonActionPerformed(ActionEvent evt) {
+        PickedLanguage = "en";
+        updateTexts();
+        layout.show(layoutPanel, "card2");
+    }
+
+    private void callHelpFunction() {
+        JOptionPane.showMessageDialog(
+                paymentPanel,
+                LanguageSetup.get(PickedLanguage, "alarm.help.info"),
+                LanguageSetup.get(PickedLanguage, "alarm.help"),
+                JOptionPane.INFORMATION_MESSAGE
+        );
+    }
+
+    private void refreshBasketTable() {
+        DefaultTableModel model = (DefaultTableModel) jTable1.getModel();
+        model.setRowCount(0);
         java.util.Map<String, Integer> ilosci = new java.util.HashMap<>();
         java.util.Map<String, Produkt> produktyMap = new java.util.HashMap<>();
         java.math.BigDecimal suma = java.math.BigDecimal.ZERO;
-
         for (Produkt p : kasaService.getKoszyk()) {
             String kod = p.getKodKreskowy();
-            ilosci.put(kod, ilosci.getOrDefault(kod, 0) + 1);
+            ilosci.merge(kod, 1, Integer::sum);
             produktyMap.putIfAbsent(kod, p);
         }
-
         for (String kod : ilosci.keySet()) {
             Produkt p = produktyMap.get(kod);
             int qty = ilosci.get(kod);
             java.math.BigDecimal razem = p.getCena().multiply(java.math.BigDecimal.valueOf(qty));
             suma = suma.add(razem);
-
             model.addRow(new Object[]{p.getNazwa(), qty, razem});
         }
-
         jLabel2.setText(suma + " PLN");
     }
 
-    
-    
-    // Variables declaration - do not modify//GEN-BEGIN:variables
-    private javax.swing.JButton addProductManually;
-    private javax.swing.JButton backToBasketFromManualEntryButton;
-    private javax.swing.JPanel basketPanel;
-    private javax.swing.JButton callHelpButton;
-    private javax.swing.JButton callHelpButton2;
-    private javax.swing.JButton englishLanguageButton;
-    private javax.swing.JButton gotoManualEntryButton;
-    private javax.swing.JButton gotoPaymentButton;
-    private javax.swing.JLabel jLabel2;
-    private javax.swing.JPanel jPanel1;
-    private javax.swing.JScrollPane jScrollPane1;
-    private javax.swing.JTable jTable1;
-    private javax.swing.JPanel languageSelectionPanel;
-    private javax.swing.JPanel layoutPanel;
-    private javax.swing.JPanel manualProductEntryPanel;
-    private javax.swing.JButton payByCardButton;
-    private javax.swing.JButton payByCashButton;
-    private javax.swing.JPanel paymentPanel;
-    private javax.swing.JButton polishLanguageButton;
-    private javax.swing.JTextField productCodeTextField;
-    private javax.swing.JLabel productNameLabel;
-    private javax.swing.JButton searchForProductButton;
-    private javax.swing.JButton selectLanguageButton;
-    private javax.swing.JButton startCheckout;
-    private javax.swing.JPanel startingPanel;
-    // End of variables declaration//GEN-END:variables
-    private CardLayout layout;
-
     private void updateTexts() {
-        callHelpButton.setText(       LanguageSetup.get(PickedLanguage, "menu.help"));
-        callHelpButton2.setText(      LanguageSetup.get(PickedLanguage, "menu.help"));
-        selectLanguageButton.setText( LanguageSetup.get(PickedLanguage, "menu.language"));
-        startCheckout.setText(        LanguageSetup.get(PickedLanguage, "start.scan"));
+        callHelpButton.setText(LanguageSetup.get(PickedLanguage, "menu.help"));
+        callHelpButton2.setText(LanguageSetup.get(PickedLanguage, "menu.help"));
+        selectLanguageButton.setText(LanguageSetup.get(PickedLanguage, "menu.language"));
+        startCheckout.setText(LanguageSetup.get(PickedLanguage, "start.scan"));
         gotoManualEntryButton.setText(LanguageSetup.get(PickedLanguage, "cart.manual"));
-        gotoPaymentButton.setText(    LanguageSetup.get(PickedLanguage, "cart.checkout"));
-        backToBasketFromManualEntryButton
-            .setText(LanguageSetup.get(PickedLanguage, "cart.back"));
-        productCodeTextField.setText( LanguageSetup.get(PickedLanguage, "input.code"));
+        gotoPaymentButton.setText(LanguageSetup.get(PickedLanguage, "cart.checkout"));
+        backToBasketFromManualEntryButton.setText(LanguageSetup.get(PickedLanguage, "cart.back"));
+        productCodeTextField.setText(LanguageSetup.get(PickedLanguage, "input.code"));
         searchForProductButton.setText(LanguageSetup.get(PickedLanguage, "search.find"));
-        addProductManually.setText(    LanguageSetup.get(PickedLanguage, "cart.addManual"));
-        payByCashButton.setText(      LanguageSetup.get(PickedLanguage, "payment.cash"));
-        payByCardButton.setText(      LanguageSetup.get(PickedLanguage, "payment.card"));
-        polishLanguageButton.setText( LanguageSetup.get(PickedLanguage, "language.pl"));
+        addProductManually.setText(LanguageSetup.get(PickedLanguage, "cart.addManual"));
+        payByCashButton.setText(LanguageSetup.get(PickedLanguage, "payment.cash"));
+        payByCardButton.setText(LanguageSetup.get(PickedLanguage, "payment.card"));
+        polishLanguageButton.setText(LanguageSetup.get(PickedLanguage, "language.pl"));
         englishLanguageButton.setText(LanguageSetup.get(PickedLanguage, "language.en"));
-        javax.swing.table.DefaultTableModel model =
-            (javax.swing.table.DefaultTableModel) jTable1.getModel();
-        model.setColumnIdentifiers(new String[] {
-            LanguageSetup.get(PickedLanguage, "column.productName"),
-            LanguageSetup.get(PickedLanguage, "column.quantity"),
-            LanguageSetup.get(PickedLanguage, "column.price")
+        DefaultTableModel model = (DefaultTableModel) jTable1.getModel();
+        model.setColumnIdentifiers(new String[]{
+                LanguageSetup.get(PickedLanguage, "column.productName"),
+                LanguageSetup.get(PickedLanguage, "column.quantity"),
+                LanguageSetup.get(PickedLanguage, "column.price")
         });
     }
 
+
+    private JButton addProductManually;
+    private JButton backToBasketFromManualEntryButton;
+    private JPanel basketPanel;
+    private JButton callHelpButton;
+    private JButton callHelpButton2;
+    private JButton englishLanguageButton;
+    private JButton gotoManualEntryButton;
+    private JButton gotoPaymentButton;
+    private JLabel jLabel2;
+    private JPanel jPanel1;
+    private JScrollPane jScrollPane1;
+    private JTable jTable1;
+    private JPanel languageSelectionPanel;
+    private JPanel layoutPanel;
+    private JPanel manualProductEntryPanel;
+    private JButton payByCardButton;
+    private JButton payByCashButton;
+    private JPanel paymentPanel;
+    private JButton polishLanguageButton;
+    private JTextField productCodeTextField;
+    private JLabel productNameLabel;
+    private JButton searchForProductButton;
+    private JButton selectLanguageButton;
+    private JButton startCheckout;
+    private JPanel startingPanel;
 }
