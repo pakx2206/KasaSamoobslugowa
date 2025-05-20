@@ -32,6 +32,7 @@ public class CartPanel extends JPanel {
         JButton btnManual   = new JButton("Dodaj kod ręcznie");
         JButton btnCheckout = new JButton("Finalizuj transakcję");
         JButton btnBack     = new JButton("Powrót");
+        JButton btnLoyalty = new JButton("Loyalty Card");
 
         btnRemove.addActionListener(e -> removeProduct());
         btnChange.addActionListener(e -> changeQuantity());
@@ -57,6 +58,8 @@ public class CartPanel extends JPanel {
         btnPanel.add(btnManual);
         btnPanel.add(btnCheckout);
         btnPanel.add(btnBack);
+        btnPanel.add(btnLoyalty);
+
 
         totalLabel = new JLabel("Suma: 0");
         totalLabel.setFont(totalLabel.getFont().deriveFont(Font.BOLD));
@@ -110,10 +113,15 @@ public class CartPanel extends JPanel {
         for (Produkt p : kasaService.getKoszyk()) {
             listModel.addElement(p);
         }
-        BigDecimal sum = kasaService.getKoszyk().stream()
-            .map(Produkt::getCena)
-            .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal sum = BigDecimal.ZERO;
+        for (Produkt p : kasaService.getKoszyk()) {
+            BigDecimal price = kasaService.getPriceWithDiscount(p);
+            sum = sum.add(price);
+        }
         totalLabel.setText("Suma: " + sum);
+        if (kasaService.getLoyaltyCustomerId() != null) {
+            totalLabel.setText(totalLabel.getText() + " (Loyalty discount applied)");
+        }
     }
 
     private void removeProduct() {

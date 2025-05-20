@@ -49,12 +49,15 @@ public class LanguageSetup {
         pl.put("alarm.help.info",              "Wezwano pomoc - proszę czekać na obsługę");
         pl.put("goTo.languagePanel",           "Przechodzę do wyboru języka");
         pl.put("nip",                          "Wprowadź NIP nabywcy (opcjonalnie): ");
+        pl.put("loyalty.card",                 "Karta lojalnościowa");
+        pl.put("loyalty.prompt",                 "Podaj numer karty lojalnościowej:");
+        pl.put("loyalty.success",                 "Zniżka lojalnościowa została zastosowana");
     // Komunikaty NFC i błędów
         pl.put("NFCScanner.connection.error", "Nie można uruchomić czytnika NFC");
         pl.put("NFCScanner.error",            "Błąd NFC: ");
         pl.put("NFCScan.confirmation",        "Zeskanowano NFC: ");
         pl.put("error",                       "Błąd");
-        
+
     }
     //Język Angielski
     static{
@@ -96,14 +99,18 @@ public class LanguageSetup {
         en.put("alarm.help.info",              "Help has been called - please wait for service");
         en.put("goTo.languagePanel",           "Going to choose a language panel");
         en.put("nip",                          "Enter the buyer's NIP (optional): ");
+        en.put("loyalty.card",                 "Loyalty card");
+        en.put("loyalty.prompt",                 "Put your loyalty card number:");
+        en.put("loyalty.success",                 "Sale discount was applied.");
     // NFC & error messages
         en.put("NFCScanner.connection.error", "Cannot initialize NFC reader");
         en.put("NFCScanner.error",            "NFC Error");
         en.put("NFCScan.confirmation",        "NFC scanned: ");
         en.put("error",                       "Error");
 
-    
-            
+
+
+
     }
     
     public static String get(String PickedLanguage, String key){
