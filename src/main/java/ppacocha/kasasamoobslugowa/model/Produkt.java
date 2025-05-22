@@ -10,21 +10,28 @@ public class Produkt {
   private String nfcTag;
   private int ilosc;
   private BigDecimal vatRate;
+  private boolean requiresAgeVerification;
 
 
   public Produkt(String nazwa, BigDecimal cena, String kodKreskowy,
-                   String nfcTag, int ilosc, BigDecimal vatRate) {
+                   String nfcTag, int ilosc, BigDecimal vatRate, boolean requiresAgeVerification) {
         this.nazwa       = nazwa;
         this.cena        = cena;
         this.kodKreskowy = kodKreskowy;
         this.nfcTag      = nfcTag;
         this.ilosc       = ilosc;
         this.vatRate     = vatRate;
+        this.requiresAgeVerification = requiresAgeVerification;
   }
-  public Produkt(String nazwa, BigDecimal cena, String kodKreskowy, String nfcTag) {
-        this(nazwa, cena, kodKreskowy, nfcTag, 0, BigDecimal.valueOf(0.23));
+  public Produkt(String nazwa, BigDecimal cena, String kodKreskowy, String nfcTag,  boolean requiresAgeVerification) {
+        this(nazwa, cena, kodKreskowy, nfcTag, 0, BigDecimal.valueOf(0.23), requiresAgeVerification);
   }
-
+  public boolean isRequiresAgeVerification() {
+    return requiresAgeVerification;
+  }
+  public void setRequiresAgeVerification(boolean requiresAgeVerification) {
+    this.requiresAgeVerification = requiresAgeVerification;
+  }
   public String getNazwa() {
     return nazwa;
   }

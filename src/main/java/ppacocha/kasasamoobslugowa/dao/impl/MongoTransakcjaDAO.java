@@ -11,6 +11,7 @@ import ppacocha.kasasamoobslugowa.model.Produkt;
 import ppacocha.kasasamoobslugowa.util.MongoClientProvider;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
@@ -24,7 +25,6 @@ public class MongoTransakcjaDAO implements TransakcjaDAO {
 
     public MongoTransakcjaDAO() {
         MongoDatabase db = MongoClientProvider.getDatabase();
-        // Użyjmy kolekcji "transakcja" (tak, jak w Twojej bazie)
         coll = db.getCollection("transakcja");
     }
 
@@ -52,7 +52,6 @@ public class MongoTransakcjaDAO implements TransakcjaDAO {
                 .append("produkty", items);
 
         InsertOneResult res = coll.insertOne(doc);
-        // zwróć hex String ObjectId
         ObjectId oid = res.getInsertedId().asObjectId().getValue();
         return oid.toHexString();
     }
@@ -66,20 +65,38 @@ public class MongoTransakcjaDAO implements TransakcjaDAO {
         @SuppressWarnings("unchecked")
         List<Document> items = (List<Document>) d.get("produkty");
         for (Document it : items) {
-            String code = it.getString("kod_kreskowy");
-            int qty     = it.getInteger("ilosc", 0);
-            BigDecimal price = BigDecimal.valueOf(it.getDouble("cena_jednostkowa"));
+            String name     = it.getString("nazwa");
+            String code     = it.getString("kod_kreskowy");
+            String nfcTag   = it.getString("nfc_tag");
+            int qty         = it.getInteger("ilosc", 1);
+            Number unitNum = it.get("cena_jednostkowa", Number.class);
+            BigDecimal unit = (unitNum != null) ? new BigDecimal(unitNum.toString()) : BigDecimal.ZERO;
+            Number vatNum = it.get("vat_rate", Number.class);
+            BigDecimal vat = (vatNum != null) ? new BigDecimal(vatNum.toString()) : BigDecimal.ZERO;
+            boolean requiresAge = it.getBoolean("requiresAgeVerification", false);
+
             for (int i = 0; i < qty; i++) {
-                products.add(new Produkt(code, price, code, null, 0, BigDecimal.ZERO));
+                products.add(new Produkt(
+                        name,
+                        unit,
+                        code,
+                        nfcTag,
+                        1,
+                        vat,
+                        requiresAge
+                ));
             }
         }
 
         Transakcja tx = new Transakcja(products, d.getString("typ_platnosci"));
         tx.setId(id);
-        tx.setData(java.time.LocalDateTime.parse(d.getString("data")));
-        tx.setSuma(BigDecimal.valueOf(d.getDouble("suma")));
+        tx.setData(LocalDateTime.parse(d.getString("data")));
+        Number sumValue = d.get("suma", Number.class);
+        BigDecimal suma = (sumValue != null) ? new BigDecimal(sumValue.toString()) : BigDecimal.ZERO;
+        tx.setSuma(suma);
         return tx;
     }
+
 
     @Override
     public List<Transakcja> findAll() {

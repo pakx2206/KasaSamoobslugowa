@@ -1,5 +1,7 @@
 package ppacocha.kasasamoobslugowa.ui;
 
+import ppacocha.kasasamoobslugowa.dao.ProduktDAO;
+import ppacocha.kasasamoobslugowa.dao.impl.MongoProduktDAO;
 import ppacocha.kasasamoobslugowa.nfc.CardReaderNdef;
 import ppacocha.kasasamoobslugowa.model.Produkt;
 import ppacocha.kasasamoobslugowa.model.Transakcja;
@@ -26,10 +28,17 @@ public class AppFrame extends JFrame {
     private CardReaderNdef reader;
     private String PickedLanguage = "pl";
     private CardLayout layout;
+    private boolean waitingForAgeVerification = false;
+    private boolean staffClosingAllowed = false;
+    private Produkt productAwaitingVerification = null;
+    private static final String STAFF_NFC_TAG = "NFC01";
+    private final ProduktDAO produktDao;
+    private JDialog ageDialog;
     private final JButton printReportButton = new JButton("Drukuj raport");
     public AppFrame() {
         kasaService = new KasaService();
         raportService = new RaportService();
+        this.produktDao = new MongoProduktDAO();
         layout = new CardLayout();
         initComponents();
         setLocationRelativeTo(null);
@@ -100,6 +109,50 @@ public class AppFrame extends JFrame {
         layoutPanel.add(languageSelectionPanel, "card5");
         layoutPanel.add(paymentPanel, "card6");
     }
+    private void handleScan(String code) {
+        if (productAwaitingVerification != null && STAFF_NFC_TAG.equals(code)) {
+            if (ageDialog != null && ageDialog.isShowing()) {
+                ageDialog.dispose();
+            }
+            kasaService.verifyAge();
+            kasaService.dodajPoKodzieLubTagu(productAwaitingVerification.getKodKreskowy());
+            refreshBasketTable();
+            productAwaitingVerification = null;
+            return;
+        }
+
+        Produkt p = produktDao.findById(code);
+        if (p == null) p = produktDao.findByNfcTag(code);
+        if (p == null) {
+            JOptionPane.showMessageDialog(this,
+                    "Nie znaleziono produktu: " + code,
+                    "Błąd", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        if (p.isRequiresAgeVerification() && !kasaService.isAgeVerified()) {
+            productAwaitingVerification = p;
+
+            ageDialog = new JDialog(this, "Weryfikacja wieku", Dialog.ModalityType.APPLICATION_MODAL);
+            ageDialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
+            ageDialog.setLayout(new BorderLayout(10,10));
+            ageDialog.add(new JLabel(
+                    "<html>Produkt „"+p.getNazwa()+"\" wymaga potwierdzenia wieku (18+).<br>" +
+                            "Proszę poczekać na personel i zeskanować ich kartę.</html>"
+            ), BorderLayout.CENTER);
+            ageDialog.pack();
+            ageDialog.setResizable(false);
+            ageDialog.setLocationRelativeTo(this);
+            ageDialog.setVisible(true);
+
+            return;
+        }
+
+        // normalne dodanie produktu
+        kasaService.dodajPoKodzieLubTagu(code);
+        refreshBasketTable();
+    }
+
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -539,17 +592,18 @@ public class AppFrame extends JFrame {
                         String raw = reader.readTextRecord().trim();
                         String digits = raw.replaceFirst("(?i)^n", "");
                         if (!digits.matches("\\d+")) continue;
-                        String tag = "NFC" + String.format("%03d", Integer.parseInt(digits));
+                        String tag = "NFC" + digits;
                         SwingUtilities.invokeLater(() -> {
                             try {
-                                kasaService.dodajPoKodzieLubTagu(tag);
-                                refreshBasketTable();
-                                JOptionPane.showMessageDialog(
-                                        this,
-                                        LanguageSetup.get(PickedLanguage, "NFCScan.confirmation") + tag,
-                                        "NFC",
-                                        JOptionPane.INFORMATION_MESSAGE
-                                );
+                                handleScan(tag);
+                                if (!STAFF_NFC_TAG.equals(tag) && productAwaitingVerification == null) {
+                                    JOptionPane.showMessageDialog(
+                                            this,
+                                            LanguageSetup.get(PickedLanguage, "NFCScan.confirmation") + tag,
+                                            "NFC",
+                                            JOptionPane.INFORMATION_MESSAGE
+                                    );
+                                }
                             } catch (Exception ex) {
                                 JOptionPane.showMessageDialog(
                                         this,
@@ -566,6 +620,9 @@ public class AppFrame extends JFrame {
             nfcThread.start();
         }
     }
+
+
+
 
     private void searchForProductButtonActionPerformed(ActionEvent evt) {
         String partial = productCodeTextField.getText().trim();
@@ -588,7 +645,7 @@ public class AppFrame extends JFrame {
                 wyniki.get(0)
         );
         if (selected != null) {
-            kasaService.dodajPoKodzieLubTagu(selected.getKodKreskowy());
+            handleScan(selected.getKodKreskowy());
             refreshBasketTable();
             JOptionPane.showMessageDialog(
                     this,
@@ -603,7 +660,7 @@ public class AppFrame extends JFrame {
     private void addProductManuallyActionPerformed(ActionEvent evt) {
         String code = productCodeTextField.getText().trim();
         try {
-            kasaService.dodajPoKodzieLubTagu(code);
+            handleScan(code);
             JOptionPane.showMessageDialog(this, LanguageSetup.get(PickedLanguage, "added.product") + code);
             productCodeTextField.setText("");
             refreshBasketTable();
@@ -725,6 +782,7 @@ public class AppFrame extends JFrame {
 
         jLabel2.setText(suma + " PLN");
     }
+
 
 
     private void updateTexts() {

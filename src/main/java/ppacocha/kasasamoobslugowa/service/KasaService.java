@@ -1,27 +1,37 @@
 package ppacocha.kasasamoobslugowa.service;
 
+import ppacocha.kasasamoobslugowa.dao.KoszykDAO;
+import ppacocha.kasasamoobslugowa.dao.LoyaltyDAO;
+import ppacocha.kasasamoobslugowa.dao.PromotionDAO;
+import ppacocha.kasasamoobslugowa.dao.ProduktDAO;
+import ppacocha.kasasamoobslugowa.dao.TransakcjaDAO;
+import ppacocha.kasasamoobslugowa.dao.impl.MongoKoszykDAO;
+import ppacocha.kasasamoobslugowa.dao.impl.MongoLoyaltyDAO;
+import ppacocha.kasasamoobslugowa.dao.impl.MongoPromotionDAO;
+import ppacocha.kasasamoobslugowa.dao.impl.MongoProduktDAO;
+import ppacocha.kasasamoobslugowa.dao.impl.MongoTransakcjaDAO;
+import ppacocha.kasasamoobslugowa.model.Produkt;
+import ppacocha.kasasamoobslugowa.model.Transakcja;
+import java.time.LocalDateTime;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import ppacocha.kasasamoobslugowa.dao.*;
-import ppacocha.kasasamoobslugowa.dao.impl.*;
-import ppacocha.kasasamoobslugowa.model.Loyalty;
-import ppacocha.kasasamoobslugowa.model.Produkt;
-import ppacocha.kasasamoobslugowa.model.Promotion;
-import ppacocha.kasasamoobslugowa.model.Transakcja;
-
 public class KasaService {
     private final PromotionDAO    promotionDao    = new MongoPromotionDAO();
     private final LoyaltyDAO      loyaltyDao      = new MongoLoyaltyDAO();
-    private final MongoProduktDAO produktDao      = new MongoProduktDAO();
+    private final ProduktDAO      produktDao      = new MongoProduktDAO();
     private final KoszykDAO       koszykDao       = new MongoKoszykDAO();
     private final TransakcjaDAO   transakcjaDao   = new MongoTransakcjaDAO();
 
     private String     loyaltyCustomerId = null;
     private BigDecimal loyaltyDiscount   = BigDecimal.ZERO;
+    private boolean    ageVerified       = false;
+    private LocalDateTime ageVerifiedAt  = null;
 
     public void dodajPoKodzieLubTagu(String raw) {
         String code = raw.trim();
@@ -36,7 +46,18 @@ public class KasaService {
             throw new IllegalArgumentException("Produkt o identyfikatorze '" + raw + "' nie istnieje w bazie");
         if (p.getIlosc() <= 0)
             throw new IllegalArgumentException("Produkt '" + p.getNazwa() + "' jest niedostępny w magazynie.");
+
         koszykDao.addProduct(p);
+    }
+
+    public boolean isAgeVerified() {
+        return ageVerified;
+    }
+
+    /** Ustawia flagę weryfikacji wieku i zapisuje czas */
+    public void verifyAge() {
+        this.ageVerified   = true;
+        this.ageVerifiedAt = LocalDateTime.now();
     }
 
     public void usunPoKodzie(String kodKreskowy) {
@@ -56,12 +77,12 @@ public class KasaService {
     }
 
     public void applyLoyaltyCard(String phoneOrTag) {
-        Loyalty loyalty = loyaltyDao.findByPhoneOrTag(phoneOrTag);
+        var loyalty = loyaltyDao.findByPhoneOrTag(phoneOrTag);
         if (loyalty == null)
             throw new IllegalArgumentException("Nie znaleziono karty lojalnościowej: " + phoneOrTag);
         this.loyaltyCustomerId = loyalty.getId();
         BigDecimal d = loyalty.getDiscount();
-        this.loyaltyDiscount = (d != null ? d : BigDecimal.ZERO);
+        this.loyaltyDiscount   = (d != null ? d : BigDecimal.ZERO);
     }
 
     public String getLoyaltyCustomerId() {
@@ -91,16 +112,26 @@ public class KasaService {
 
         Transakcja tx = new Transakcja(items, typPlatnosci);
         tx.setSuma(total);
+        // opcjonalnie: możesz tu przekazać do transakcji timestamp weryfikacji:
+        tx.setAgeVerifiedAt(ageVerifiedAt);
+
         String id = transakcjaDao.save(tx);
         tx.setId(id);
 
         ilosci.forEach((kod, qty) -> produktDao.zmniejszStan(kod, qty));
 
+        // resetuje flagi i koszyk
+        resetSession();
+        return tx;
+    }
+
+    /** Czyści koszyk, lojalność i flagę weryfikacji wieku */
+    public void resetSession() {
         koszykDao.clear();
         loyaltyCustomerId = null;
         loyaltyDiscount   = BigDecimal.ZERO;
-
-        return tx;
+        ageVerified       = false;
+        ageVerifiedAt     = null;
     }
 
     public BigDecimal getPriceWithDiscount(Produkt product) {
@@ -116,7 +147,6 @@ public class KasaService {
             }
         }
 
-        return price
-                .setScale(2, RoundingMode.HALF_UP);
+        return price.setScale(2, RoundingMode.HALF_UP);
     }
 }

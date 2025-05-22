@@ -9,7 +9,9 @@ public class Transakcja {
     private final List<Produkt> produkty;
     private LocalDateTime data;
     private BigDecimal suma;
-    private final String typPlatnosci;  
+    private final String typPlatnosci;
+    private String ageVerifiedBy;
+    private LocalDateTime ageVerifiedAt;
     public Transakcja(List<Produkt> produkty, String typPlatnosci) {
         this.produkty = produkty;
         this.data = LocalDateTime.now();
@@ -32,7 +34,12 @@ public class Transakcja {
     public BigDecimal getSuma() { return suma; }
     public void setSuma(BigDecimal suma) { this.suma = suma; }
     public String getTypPlatnosci() { return typPlatnosci; }
-
+    public LocalDateTime getAgeVerifiedAt() {
+        return ageVerifiedAt;
+    }
+    public void setAgeVerifiedAt(LocalDateTime ageVerifiedAt) {
+        this.ageVerifiedAt = ageVerifiedAt;
+    }
     @Override
     public String toString() {
         return "Transakcja{" +

@@ -16,6 +16,9 @@ public class CartPanel extends JPanel {
     private final DefaultListModel<Produkt> listModel;
     private final JList<Produkt> productList;
     private final JLabel totalLabel;
+    private boolean waitingForAgeVerification = false;
+    private Produkt productAwaitingVerification = null;
+    private static final String STAFF_NFC_TAG = "NFC01";
 
     public CartPanel(KasaService service, MainFrame frame) {
         this.kasaService = service;
@@ -40,8 +43,7 @@ public class CartPanel extends JPanel {
             String code = JOptionPane.showInputDialog(this, "Podaj kod produktu:");
             if (code != null && !code.trim().isEmpty()) {
                 try {
-                    kasaService.dodajPoKodzieLubTagu(code.trim());
-                    refreshList();
+                    addProductAndMaybeVerifyAge(code.trim());
                 } catch (Exception ex) {
                     JOptionPane.showMessageDialog(this,
                         "Błąd: " + ex.getMessage(),
@@ -87,7 +89,7 @@ public class CartPanel extends JPanel {
                         String finalCode = code;
                         SwingUtilities.invokeLater(() -> {
                             try {
-                                kasaService.dodajPoKodzieLubTagu(finalCode);
+                                addProductAndMaybeVerifyAge(finalCode);
                                 refreshList();
                             } catch (Exception ex) {
                                 JOptionPane.showMessageDialog(this,
@@ -105,6 +107,33 @@ public class CartPanel extends JPanel {
             JOptionPane.showMessageDialog(this,
                 "Nie można uruchomić skanera NFC: " + e.getMessage(),
                 "Błąd NFC", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+    private void addProductAndMaybeVerifyAge(String code) {
+        try {
+            addProductAndMaybeVerifyAge(code);
+            Produkt added = kasaService.getKoszyk()
+                    .get(kasaService.getKoszyk().size()-1);
+            if (added.isRequiresAgeVerification() && !kasaService.isAgeVerified()) {
+                int ok = JOptionPane.showConfirmDialog(
+                        this,
+                        "Produkt \"" + added.getNazwa() + "\" wymaga potwierdzenia wieku (18+).\n" +
+                                "Czy klient ma ukończone 18 lat?",
+                        "Weryfikacja wieku",
+                        JOptionPane.YES_NO_OPTION,
+                        JOptionPane.QUESTION_MESSAGE);
+                if (ok == JOptionPane.YES_OPTION) {
+                    kasaService.verifyAge();
+                } else {
+                    kasaService.usunPoKodzie(added.getKodKreskowy());
+                    JOptionPane.showMessageDialog(this,
+                            "Nie można sprzedać produktu bez potwierdzenia wieku.",
+                            "Błąd weryfikacji", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+            refreshList();
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, ex.getMessage(), "Błąd", JOptionPane.ERROR_MESSAGE);
         }
     }
 

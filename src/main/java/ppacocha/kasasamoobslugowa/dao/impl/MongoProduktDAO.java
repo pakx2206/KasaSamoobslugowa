@@ -24,7 +24,7 @@ public class MongoProduktDAO implements ProduktDAO {
     private Produkt docToProdukt(Document d) {
         String kod = d.get("kod_kreskowy").toString();
         String nazwa = d.getString("nazwa");
-
+        boolean requires = d.getBoolean("requiresAgeVerification", false);
         Object priceRaw = d.get("cena");
         BigDecimal cena = priceRaw instanceof Number
                 ? BigDecimal.valueOf(((Number) priceRaw).doubleValue())
@@ -43,7 +43,7 @@ public class MongoProduktDAO implements ProduktDAO {
                 ? BigDecimal.valueOf(((Number) vatRaw).doubleValue())
                 : new BigDecimal(vatRaw.toString());
 
-        return new Produkt(nazwa, cena, kod, nfc, ilosc, vat);
+        return new Produkt(nazwa, cena, kod, nfc, ilosc, vat, requires);
     }
 
     @Override
@@ -81,7 +81,8 @@ public class MongoProduktDAO implements ProduktDAO {
                 .append("cena",         p.getCena().doubleValue())
                 .append("nfc_tag",      p.getNfcTag())
                 .append("ilosc",        p.getIlosc())
-                .append("vat_rate",     p.getVatRate().doubleValue());
+                .append("vat_rate",     p.getVatRate().doubleValue())
+                .append("requiresAgeVerification", p.isRequiresAgeVerification());
         coll.insertOne(d);
     }
 
@@ -94,6 +95,7 @@ public class MongoProduktDAO implements ProduktDAO {
                         .append("nfc_tag",  p.getNfcTag())
                         .append("ilosc",    p.getIlosc())
                         .append("vat_rate", p.getVatRate().doubleValue())
+                        .append("requiresAgeVerification", p.isRequiresAgeVerification())
                 )
         );
     }
