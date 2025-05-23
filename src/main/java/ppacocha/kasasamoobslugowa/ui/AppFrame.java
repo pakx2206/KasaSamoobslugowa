@@ -10,7 +10,9 @@ import ppacocha.kasasamoobslugowa.service.RaportService;
 import ppacocha.kasasamoobslugowa.util.PDFReportGenerator;
 import ppacocha.kasasamoobslugowa.util.ReceiptGenerator;
 import ppacocha.kasasamoobslugowa.util.LanguageSetup;
-
+import ppacocha.kasasamoobslugowa.ui.VirtualKeyboard;
+import javax.swing.event.DocumentListener;
+import javax.swing.event.DocumentEvent;
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
@@ -35,16 +37,138 @@ public class AppFrame extends JFrame {
     private final ProduktDAO produktDao;
     private JDialog ageDialog;
     private final JButton printReportButton = new JButton("Drukuj raport");
+    private JList<Produkt> productList;
+    private DefaultListModel<Produkt> productListModel;
+    private boolean loyaltyApplied = false;
     public AppFrame() {
+
         kasaService = new KasaService();
         raportService = new RaportService();
         this.produktDao = new MongoProduktDAO();
+        productListModel = new DefaultListModel<>();
+        productList = new JList<>(productListModel);
+        productList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        productList.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2) {
+                    Produkt sel = productList.getSelectedValue();
+                    if (sel != null) {
+                        try {
+                            handleScan(sel.getKodKreskowy());
+                            refreshBasketTable();
+                            productCodeTextField.setText("");
+                            productListModel.clear();
+                            layout.show(layoutPanel, "card3");
+                        } catch (IllegalArgumentException ex) {
+                            JOptionPane.showMessageDialog(
+                                    AppFrame.this,
+                                    ex.getMessage(),
+                                    LanguageSetup.get(PickedLanguage, "error"),
+                                    JOptionPane.ERROR_MESSAGE
+                            );
+                        }
+                    }
+                }
+            }
+        });
         layout = new CardLayout();
+
+
         initComponents();
         setLocationRelativeTo(null);
         reInitCardLayout();
+        reInitCardLayout();
+
+
+        manualProductEntryPanel.removeAll();
+        manualProductEntryPanel.setLayout(new BorderLayout(10,10));
+        JPanel topBar = new JPanel(new BorderLayout(5,5));
+        topBar.add(backToBasketFromManualEntryButton, BorderLayout.WEST);
+        JPanel inputPanel = new JPanel(new BorderLayout(5,5));
+        inputPanel.add(productCodeTextField, BorderLayout.CENTER);
+        inputPanel.add(searchForProductButton,   BorderLayout.EAST);
+        topBar.add(inputPanel, BorderLayout.CENTER);
+        JScrollPane scroll = new JScrollPane(productList);
+        VirtualKeyboardPanel kb = new VirtualKeyboardPanel(productCodeTextField, true);
+        manualProductEntryPanel.add(topBar, BorderLayout.NORTH);
+        manualProductEntryPanel.add(scroll,  BorderLayout.CENTER);
+        manualProductEntryPanel.add(kb,      BorderLayout.SOUTH);
+        manualProductEntryPanel.revalidate();
+        manualProductEntryPanel.repaint();
+        layout.show(layoutPanel, "card4");
+
         updateTexts();
         layout.show(layoutPanel, "card2");
+
+        productCodeTextField.getDocument().addDocumentListener(new DocumentListener() {
+            void filter() {
+                String txt = productCodeTextField.getText().trim();
+                productListModel.clear();
+                if (!txt.isEmpty()) {
+                    kasaService.szukajPoKodLubNazwie(txt)
+                            .forEach(productListModel::addElement);
+                }
+            }
+            public void insertUpdate(DocumentEvent e) { filter(); }
+            public void removeUpdate(DocumentEvent e) { filter(); }
+            public void changedUpdate(DocumentEvent e){ filter(); }
+        });
+        addProductManually.addActionListener(evt -> {
+            String code;
+            Produkt sel = productList.getSelectedValue();
+            if (sel != null) {
+                code = sel.getKodKreskowy();
+            } else {
+                code = productCodeTextField.getText().trim();
+            }
+            try {
+                handleScan(code);
+                refreshBasketTable();
+                productCodeTextField.setText("");
+                productListModel.clear();
+                layout.show(layoutPanel, "card3");
+            } catch (IllegalArgumentException ex) {
+                JOptionPane.showMessageDialog(
+                        AppFrame.this,
+                        ex.getMessage(),
+                        LanguageSetup.get(PickedLanguage, "error"),
+                        JOptionPane.ERROR_MESSAGE
+                );
+            }
+        });
+        loyaltyCardButton.addActionListener(evt -> {
+            if (loyaltyApplied) return;
+
+            String code = NumericInputDialog.showNumericDialog(
+                    AppFrame.this,
+                    LanguageSetup.get(PickedLanguage, "loyalty.prompt")
+            );
+            if (code != null && !code.isBlank()) {
+                try {
+                    kasaService.applyLoyaltyCard(code);
+                    loyaltyApplied = true;
+                    loyaltyCardButton.setEnabled(false);
+                    refreshBasketTable();
+                    JOptionPane.showMessageDialog(
+                            AppFrame.this,
+                            LanguageSetup.get(PickedLanguage, "loyalty.success"),
+                            LanguageSetup.get(PickedLanguage, "success"),
+                            JOptionPane.INFORMATION_MESSAGE
+                    );
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(
+                            AppFrame.this,
+                            LanguageSetup.get(PickedLanguage, "error") + " " + ex.getMessage(),
+                            LanguageSetup.get(PickedLanguage, "error"),
+                            JOptionPane.ERROR_MESSAGE
+                    );
+                }
+            }
+        });
+
+
+        //NFC scanner
         try {
             reader = new CardReaderNdef();
         } catch (Exception e) {
@@ -148,10 +272,10 @@ public class AppFrame extends JFrame {
             return;
         }
 
-        // normalne dodanie produktu
         kasaService.dodajPoKodzieLubTagu(code);
         refreshBasketTable();
     }
+
 
 
     /**
@@ -341,11 +465,6 @@ public class AppFrame extends JFrame {
         );
 
         loyaltyCardButton.setText("jButton1");
-        loyaltyCardButton.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                loyaltyCardButtonActionPerformed(evt);
-            }
-        });
 
         javax.swing.GroupLayout basketPanelLayout = new javax.swing.GroupLayout(basketPanel);
         basketPanel.setLayout(basketPanelLayout);
@@ -621,9 +740,6 @@ public class AppFrame extends JFrame {
         }
     }
 
-
-
-
     private void searchForProductButtonActionPerformed(ActionEvent evt) {
         String partial = productCodeTextField.getText().trim();
         if (partial.isEmpty()) {
@@ -676,24 +792,65 @@ public class AppFrame extends JFrame {
 
     private void payByCashButtonActionPerformed(ActionEvent evt) {
         try {
-            Transakcja tx = kasaService.finalizujTransakcje(LanguageSetup.get(PickedLanguage, "cash"));
-            ReceiptGenerator.generateAndSaveReceipt(this, tx, PickedLanguage, kasaService);
+            Transakcja tx = kasaService.finalizujTransakcje(
+                    LanguageSetup.get(PickedLanguage, "cash")
+            );
+            String nip = NumericInputDialog.showNumericDialog(
+                    AppFrame.this,
+                    LanguageSetup.get(PickedLanguage, "nip")
+            );
+            if (nip != null && !nip.isBlank()) {
+                tx.setNip(nip);
+            }
+            ReceiptGenerator.generateAndSaveReceipt(
+                    this, tx, PickedLanguage, kasaService
+            );
+
+            kasaService.resetSession();
+            loyaltyApplied = false;
+            loyaltyCardButton.setEnabled(true);
             refreshBasketTable();
             layout.show(layoutPanel, "card2");
+
         } catch (IllegalStateException ex) {
-            JOptionPane.showMessageDialog(this, LanguageSetup.get(PickedLanguage, "empty.cart"),
-                    "Błąd", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(
+                    this,
+                    LanguageSetup.get(PickedLanguage, "empty.cart"),
+                    "Błąd",
+                    JOptionPane.ERROR_MESSAGE
+            );
         }
     }
 
     private void payByCardButtonActionPerformed(ActionEvent evt) {
         try {
-            Transakcja tx = kasaService.finalizujTransakcje(LanguageSetup.get(PickedLanguage, "card"));
-            ReceiptGenerator.generateAndSaveReceipt(this, tx, PickedLanguage, kasaService);
+            Transakcja tx = kasaService.finalizujTransakcje(
+                    LanguageSetup.get(PickedLanguage, "card")
+            );
+            String nip = NumericInputDialog.showNumericDialog(
+                    AppFrame.this,
+                    LanguageSetup.get(PickedLanguage, "nip")
+            );
+            if (nip != null && !nip.isBlank()) {
+                tx.setNip(nip);
+            }
+            ReceiptGenerator.generateAndSaveReceipt(
+                    this, tx, PickedLanguage, kasaService
+            );
+
+            kasaService.resetSession();
+            loyaltyApplied = false;
+            loyaltyCardButton.setEnabled(true);
             refreshBasketTable();
+            
             layout.show(layoutPanel, "card2");
         } catch (IllegalStateException ex) {
-            JOptionPane.showMessageDialog(this, LanguageSetup.get(PickedLanguage, "empty.cart"), "Błąd", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(
+                    this,
+                    LanguageSetup.get(PickedLanguage, "empty.cart"),
+                    "Błąd",
+                    JOptionPane.ERROR_MESSAGE
+            );
         }
     }
 
@@ -716,35 +873,6 @@ public class AppFrame extends JFrame {
         PickedLanguage = "en";
         updateTexts();
         layout.show(layoutPanel, "card2");
-    }
-
-    private void loyaltyCardButtonActionPerformed(ActionEvent evt) {
-        String input = JOptionPane.showInputDialog(
-                this,
-                LanguageSetup.get(PickedLanguage, "loyalty.prompt"),
-                LanguageSetup.get(PickedLanguage, "loyalty.card"),
-                JOptionPane.PLAIN_MESSAGE
-        );
-        if (input != null && !input.trim().isEmpty()) {
-            try {
-                kasaService.applyLoyaltyCard(input.trim());
-                refreshBasketTable();
-                JOptionPane.showMessageDialog(
-                        this,
-                        LanguageSetup.get(PickedLanguage, "loyalty.success"),
-                        LanguageSetup.get(PickedLanguage, "success"),
-                        JOptionPane.INFORMATION_MESSAGE
-                );
-            } catch (Exception ex) {
-                JOptionPane.showMessageDialog(
-                        this,
-                        LanguageSetup.get(PickedLanguage, "error") + " " + ex.getMessage(),
-                        LanguageSetup.get(PickedLanguage, "error"),
-                        JOptionPane.ERROR_MESSAGE
-                );
-            }
-        }
-
     }
 
 

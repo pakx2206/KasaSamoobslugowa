@@ -12,4 +12,5 @@ public interface ProduktDAO {
     void delete(String kodKreskowy);
     List<Produkt> findByPartialCode(String partialCode);
     void zmniejszStan(String kodKreskowy, int amount);
+    List<Produkt> findByCodeOrNameContaining(String fragment);
 }

@@ -2,7 +2,9 @@ package ppacocha.kasasamoobslugowa.dao.impl;
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
+import com.mongodb.client.model.Filters;
 import org.bson.Document;
+import org.bson.conversions.Bson;
 import ppacocha.kasasamoobslugowa.dao.ProduktDAO;
 import ppacocha.kasasamoobslugowa.model.Produkt;
 import ppacocha.kasasamoobslugowa.util.MongoClientProvider;
@@ -130,4 +132,16 @@ public class MongoProduktDAO implements ProduktDAO {
                 new Document("$inc", new Document("ilosc", -amount))
         );
     }
+
+    @Override
+    public List<Produkt> findByCodeOrNameContaining(String fragment) {
+        List<Produkt> out = new ArrayList<>();
+        Bson regexCode = Filters.regex("kod_kreskowy", fragment, "i");
+        Bson regexName = Filters.regex("nazwa",        fragment, "i");
+        for (Document d : coll.find(Filters.or(regexCode, regexName))) {
+            out.add(docToProdukt(d));
+        }
+        return out;
+    }
+
 }

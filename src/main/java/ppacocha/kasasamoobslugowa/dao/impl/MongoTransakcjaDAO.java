@@ -109,7 +109,7 @@ public class MongoTransakcjaDAO implements TransakcjaDAO {
     }
 
     @Override
-    public void update(Transakcja transakcja) { /* opcjonalnie */ }
+    public void update(Transakcja transakcja) {}
 
     @Override
     public void delete(String id) {

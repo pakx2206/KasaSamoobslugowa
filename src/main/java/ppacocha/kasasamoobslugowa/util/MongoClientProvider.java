@@ -7,7 +7,7 @@ import java.util.ArrayList;
 
 public class MongoClientProvider {
 
-    private static final String URI = "";
+    private static final String URI = "mongodb+srv://kasaUser:kasaPass123@clusterselfcheckout.wu93pwz.mongodb.net/?retryWrites=true&w=majority&appName=ClusterSelfCheckout";
 
     private static final MongoClient client = MongoClients.create(URI);
 

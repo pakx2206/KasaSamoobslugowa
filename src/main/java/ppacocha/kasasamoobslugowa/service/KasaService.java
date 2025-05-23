@@ -54,10 +54,13 @@ public class KasaService {
         return ageVerified;
     }
 
-    /** Ustawia flagę weryfikacji wieku i zapisuje czas */
     public void verifyAge() {
         this.ageVerified   = true;
         this.ageVerifiedAt = LocalDateTime.now();
+    }
+
+    public List<Produkt> szukajPoKodLubNazwie(String fragment) {
+        return produktDao.findByCodeOrNameContaining(fragment);
     }
 
     public void usunPoKodzie(String kodKreskowy) {
@@ -125,7 +128,6 @@ public class KasaService {
         return tx;
     }
 
-    /** Czyści koszyk, lojalność i flagę weryfikacji wieku */
     public void resetSession() {
         koszykDao.clear();
         loyaltyCustomerId = null;

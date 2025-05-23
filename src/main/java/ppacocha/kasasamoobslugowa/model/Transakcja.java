@@ -12,6 +12,8 @@ public class Transakcja {
     private final String typPlatnosci;
     private String ageVerifiedBy;
     private LocalDateTime ageVerifiedAt;
+    private String nip;
+
     public Transakcja(List<Produkt> produkty, String typPlatnosci) {
         this.produkty = produkty;
         this.data = LocalDateTime.now();
@@ -21,8 +23,8 @@ public class Transakcja {
 
     private BigDecimal obliczSume() {
         return produkty.stream()
-                       .map(Produkt::getCena)
-                       .reduce(BigDecimal.ZERO, BigDecimal::add);
+                .map(Produkt::getCena)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
     public String getId() { return id; }
@@ -34,20 +36,21 @@ public class Transakcja {
     public BigDecimal getSuma() { return suma; }
     public void setSuma(BigDecimal suma) { this.suma = suma; }
     public String getTypPlatnosci() { return typPlatnosci; }
-    public LocalDateTime getAgeVerifiedAt() {
-        return ageVerifiedAt;
-    }
-    public void setAgeVerifiedAt(LocalDateTime ageVerifiedAt) {
-        this.ageVerifiedAt = ageVerifiedAt;
-    }
+    public LocalDateTime getAgeVerifiedAt() { return ageVerifiedAt; }
+    public void setAgeVerifiedAt(LocalDateTime ageVerifiedAt) { this.ageVerifiedAt = ageVerifiedAt; }
+
+    public String getNip() { return nip; }
+    public void setNip(String nip) { this.nip = nip; }
+
     @Override
     public String toString() {
         return "Transakcja{" +
-               "id=" + id +
-               ", data=" + data +
-               ", suma=" + suma +
-               ", typPlatnosci='" + typPlatnosci + '\'' +
-               ", iloscProd=" + produkty.size() +
-               '}';
+                "id=" + id +
+                ", data=" + data +
+                ", suma=" + suma +
+                ", typPlatnosci='" + typPlatnosci + '\'' +
+                (nip != null ? ", nip='" + nip + '\'' : "") +
+                ", iloscProd=" + produkty.size() +
+                '}';
     }
 }
