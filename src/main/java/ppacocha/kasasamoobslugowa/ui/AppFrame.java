@@ -73,13 +73,14 @@ public class AppFrame extends JFrame {
             }
         });
         layout = new CardLayout();
-
-
+        AppTheme.setupDefaults();
         initComponents();
+        getContentPane().setBackground(AppTheme.SECONDARY_BG);
         setLocationRelativeTo(null);
+        setSize(1920, 1080);
         reInitCardLayout();
         reInitCardLayout();
-
+        getContentPane().repaint();
 
         manualProductEntryPanel.removeAll();
         manualProductEntryPanel.setLayout(new BorderLayout(10,10));
@@ -313,17 +314,25 @@ public class AppFrame extends JFrame {
         languageSelectionPanel = new javax.swing.JPanel();
         polishLanguageButton = new javax.swing.JButton();
         englishLanguageButton = new javax.swing.JButton();
-
+        Dimension big = new Dimension(400, 400);
+        selectLanguageButton.setPreferredSize(big);
+        selectLanguageButton.setMaximumSize(big);
+        selectLanguageButton.setMinimumSize(big);
+        callHelpButton.setPreferredSize(big);
+        callHelpButton.setMinimumSize(big);
+        callHelpButton.setMaximumSize(big);
+        pack();
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
-        layoutPanel.setBackground(new java.awt.Color(255, 51, 51));
+        layoutPanel.setBackground(AppTheme.SECONDARY_BG);
         layoutPanel.setLayout(new java.awt.CardLayout());
         layoutPanel.setLayout(this.layout);
 
         callHelpButton.setText("Pomoc");
-        callHelpButton.setMaximumSize(new java.awt.Dimension(80, 80));
-        callHelpButton.setMinimumSize(new java.awt.Dimension(80, 80));
-        callHelpButton.setPreferredSize(new java.awt.Dimension(80, 80));
+        callHelpButton.setPreferredSize(AppTheme.BUTTON_SIZE);
+        selectLanguageButton.setPreferredSize(AppTheme.BUTTON_SIZE);
+        callHelpButton.setMaximumSize(AppTheme.BUTTON_SIZE);
+        selectLanguageButton.setMaximumSize(AppTheme.BUTTON_SIZE);
         callHelpButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 callHelpButtonActionPerformed(evt);
@@ -331,9 +340,10 @@ public class AppFrame extends JFrame {
         });
 
         selectLanguageButton.setText("Język");
-        selectLanguageButton.setMaximumSize(new java.awt.Dimension(80, 80));
-        selectLanguageButton.setMinimumSize(new java.awt.Dimension(80, 80));
-        selectLanguageButton.setPreferredSize(new java.awt.Dimension(80, 80));
+        callHelpButton.setPreferredSize(AppTheme.BUTTON_SIZE);
+        selectLanguageButton.setPreferredSize(AppTheme.BUTTON_SIZE);
+        callHelpButton.setMaximumSize(AppTheme.BUTTON_SIZE);
+        selectLanguageButton.setMaximumSize(AppTheme.BUTTON_SIZE);
         selectLanguageButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 selectLanguageButtonActionPerformed(evt);
@@ -346,16 +356,25 @@ public class AppFrame extends JFrame {
                 startCheckoutActionPerformed(evt);
             }
         });
+        JPanel topRightPanel = new JPanel();
+        topRightPanel.setLayout(new BoxLayout(topRightPanel, BoxLayout.Y_AXIS));
+        topRightPanel.setOpaque(false);
 
+        selectLanguageButton.setPreferredSize(new Dimension(200,200));
+        selectLanguageButton.setMaximumSize(selectLanguageButton.getPreferredSize());
+        callHelpButton     .setPreferredSize(new Dimension(200,200));
+        callHelpButton     .setMaximumSize(callHelpButton.getPreferredSize());
+
+        topRightPanel.add(selectLanguageButton);
+        topRightPanel.add(Box.createVerticalStrut(10));
+        topRightPanel.add(callHelpButton);
         javax.swing.GroupLayout startingPanelLayout = new javax.swing.GroupLayout(startingPanel);
         startingPanel.setLayout(startingPanelLayout);
         startingPanelLayout.setHorizontalGroup(
                 startingPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                         .addGroup(startingPanelLayout.createSequentialGroup()
                                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addComponent(selectLanguageButton, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-                                .addComponent(callHelpButton, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addComponent(topRightPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addContainerGap())
                         .addGroup(startingPanelLayout.createSequentialGroup()
                                 .addContainerGap(302, Short.MAX_VALUE)
@@ -366,9 +385,7 @@ public class AppFrame extends JFrame {
                 startingPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                         .addGroup(startingPanelLayout.createSequentialGroup()
                                 .addContainerGap()
-                                .addGroup(startingPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-                                        .addComponent(callHelpButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                        .addComponent(selectLanguageButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                .addComponent(topRightPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 278, Short.MAX_VALUE)
                                 .addComponent(startCheckout, javax.swing.GroupLayout.PREFERRED_SIZE, 115, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addContainerGap(160, Short.MAX_VALUE))
@@ -429,9 +446,10 @@ public class AppFrame extends JFrame {
         });
 
         callHelpButton2.setText("Pomoc");
-        callHelpButton2.setMaximumSize(new java.awt.Dimension(80, 80));
-        callHelpButton2.setMinimumSize(new java.awt.Dimension(80, 80));
-        callHelpButton2.setPreferredSize(new java.awt.Dimension(80, 80));
+        callHelpButton.setPreferredSize(AppTheme.BUTTON_SIZE);
+        selectLanguageButton.setPreferredSize(AppTheme.BUTTON_SIZE);
+        callHelpButton.setMaximumSize(AppTheme.BUTTON_SIZE);
+        selectLanguageButton.setMaximumSize(AppTheme.BUTTON_SIZE);
         callHelpButton2.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 callHelpButton2ActionPerformed(evt);
@@ -676,32 +694,42 @@ public class AppFrame extends JFrame {
 
         pack();
     }// </editor-fold>
-    private void callHelpButtonActionPerformed(ActionEvent evt) {
+    private void callHelpButtonActionPerformed(ActionEvent evt) {//GEN-FIRST:event_callHelpButtonActionPerformed
+        //GEN-FIRST:event_callHelpButtonActionPerformed
         callHelpFunction();
-    }
-
-    private void callHelpButton2ActionPerformed(ActionEvent evt) {
+    }//GEN-LAST:event_callHelpButtonActionPerformed
+//GEN-LAST:event_callHelpButtonActionPerformed
+    private void callHelpButton2ActionPerformed(ActionEvent evt) {//GEN-FIRST:event_callHelpButton2ActionPerformed
+        //GEN-FIRST:event_callHelpButton2ActionPerformed
         callHelpFunction();
-    }
-
-    private void gotoManualEntryButtonActionPerformed(ActionEvent evt) {
+    }//GEN-LAST:event_callHelpButton2ActionPerformed
+//GEN-LAST:event_callHelpButton2ActionPerformed
+    private void gotoManualEntryButtonActionPerformed(ActionEvent evt) {//GEN-FIRST:event_gotoManualEntryButtonActionPerformed
+        //GEN-FIRST:event_gotoManualEntryButtonActionPerformed
         System.out.println(LanguageSetup.get(PickedLanguage, "goTo.manual"));
         refreshBasketTable();
         layout.show(layoutPanel, "card4");
-    }
-    private void productCodeTextFieldFocusGained(FocusEvent evt) {
+    }//GEN-LAST:event_gotoManualEntryButtonActionPerformed
+//GEN-LAST:event_gotoManualEntryButtonActionPerformed
+    private void productCodeTextFieldFocusGained(FocusEvent evt) {//GEN-FIRST:event_productCodeTextFieldFocusGained
+        //GEN-FIRST:event_productCodeTextFieldFocusGained
         if (productCodeTextField.getText().equals(LanguageSetup.get(PickedLanguage,"input.code")))
             productCodeTextField.setText("");
-    }
-
-    private void productCodeTextFieldFocusLost(FocusEvent evt) {
+    }//GEN-LAST:event_productCodeTextFieldFocusGained
+//GEN-LAST:event_productCodeTextFieldFocusGained
+    private void productCodeTextFieldFocusLost(FocusEvent evt) {//GEN-FIRST:event_productCodeTextFieldFocusLost
+        //GEN-FIRST:event_productCodeTextFieldFocusLost
         if (productCodeTextField.getText().isEmpty())
             productCodeTextField.setText(LanguageSetup.get(PickedLanguage,"input.code"));
-    }
-    private void productCodeTextFieldActionPerformed(ActionEvent evt) {
+    }//GEN-LAST:event_productCodeTextFieldFocusLost
+//GEN-LAST:event_productCodeTextFieldFocusLost
+    private void productCodeTextFieldActionPerformed(ActionEvent evt) {//GEN-FIRST:event_productCodeTextFieldActionPerformed
+        //GEN-FIRST:event_productCodeTextFieldActionPerformed
         addProductManuallyActionPerformed(evt);
-    }
-    private void startCheckoutActionPerformed(ActionEvent evt) {
+    }//GEN-LAST:event_productCodeTextFieldActionPerformed
+//GEN-LAST:event_productCodeTextFieldActionPerformed
+    private void startCheckoutActionPerformed(ActionEvent evt) {//GEN-FIRST:event_startCheckoutActionPerformed
+        //GEN-FIRST:event_startCheckoutActionPerformed
         refreshBasketTable();
         layout.show(layoutPanel, "card3");
         if (reader != null && (nfcThread == null || !nfcThread.isAlive())) {
@@ -738,9 +766,10 @@ public class AppFrame extends JFrame {
             nfcThread.setDaemon(true);
             nfcThread.start();
         }
-    }
-
-    private void searchForProductButtonActionPerformed(ActionEvent evt) {
+    }//GEN-LAST:event_startCheckoutActionPerformed
+//GEN-LAST:event_startCheckoutActionPerformed
+    private void searchForProductButtonActionPerformed(ActionEvent evt) {//GEN-FIRST:event_searchForProductButtonActionPerformed
+        //GEN-FIRST:event_searchForProductButtonActionPerformed
         String partial = productCodeTextField.getText().trim();
         if (partial.isEmpty()) {
             JOptionPane.showMessageDialog(this, LanguageSetup.get(PickedLanguage, "write.barCode"));
@@ -771,9 +800,10 @@ public class AppFrame extends JFrame {
             );
             layout.show(layoutPanel, "card3");
         }
-    }
-
-    private void addProductManuallyActionPerformed(ActionEvent evt) {
+    }//GEN-LAST:event_searchForProductButtonActionPerformed
+//GEN-LAST:event_searchForProductButtonActionPerformed
+    private void addProductManuallyActionPerformed(ActionEvent evt) {//GEN-FIRST:event_addProductManuallyActionPerformed
+        //GEN-FIRST:event_addProductManuallyActionPerformed
         String code = productCodeTextField.getText().trim();
         try {
             handleScan(code);
@@ -784,13 +814,15 @@ public class AppFrame extends JFrame {
         } catch (IllegalArgumentException ex) {
             JOptionPane.showMessageDialog(this, ex.getMessage(), "Błąd", JOptionPane.ERROR_MESSAGE);
         }
-    }
-
-    private void gotoPaymentButtonActionPerformed(ActionEvent evt) {
+    }//GEN-LAST:event_addProductManuallyActionPerformed
+//GEN-LAST:event_addProductManuallyActionPerformed
+    private void gotoPaymentButtonActionPerformed(ActionEvent evt) {//GEN-FIRST:event_gotoPaymentButtonActionPerformed
+        //GEN-FIRST:event_gotoPaymentButtonActionPerformed
         layout.show(layoutPanel, "card6");
-    }
-
-    private void payByCashButtonActionPerformed(ActionEvent evt) {
+    }//GEN-LAST:event_gotoPaymentButtonActionPerformed
+//GEN-LAST:event_gotoPaymentButtonActionPerformed
+    private void payByCashButtonActionPerformed(ActionEvent evt) {//GEN-FIRST:event_payByCashButtonActionPerformed
+        //GEN-FIRST:event_payByCashButtonActionPerformed
         try {
             Transakcja tx = kasaService.finalizujTransakcje(
                     LanguageSetup.get(PickedLanguage, "cash")
@@ -820,9 +852,10 @@ public class AppFrame extends JFrame {
                     JOptionPane.ERROR_MESSAGE
             );
         }
-    }
-
-    private void payByCardButtonActionPerformed(ActionEvent evt) {
+    }//GEN-LAST:event_payByCashButtonActionPerformed
+//GEN-LAST:event_payByCashButtonActionPerformed
+    private void payByCardButtonActionPerformed(ActionEvent evt) {//GEN-FIRST:event_payByCardButtonActionPerformed
+        //GEN-FIRST:event_payByCardButtonActionPerformed
         try {
             Transakcja tx = kasaService.finalizujTransakcje(
                     LanguageSetup.get(PickedLanguage, "card")
@@ -842,7 +875,7 @@ public class AppFrame extends JFrame {
             loyaltyApplied = false;
             loyaltyCardButton.setEnabled(true);
             refreshBasketTable();
-            
+
             layout.show(layoutPanel, "card2");
         } catch (IllegalStateException ex) {
             JOptionPane.showMessageDialog(
@@ -852,42 +885,48 @@ public class AppFrame extends JFrame {
                     JOptionPane.ERROR_MESSAGE
             );
         }
-    }
-
-    private void backToBasketFromManualEntryButtonActionPerformed(ActionEvent evt) {
+    }//GEN-LAST:event_payByCardButtonActionPerformed
+//GEN-LAST:event_payByCardButtonActionPerformed
+    private void backToBasketFromManualEntryButtonActionPerformed(ActionEvent evt) {//GEN-FIRST:event_backToBasketFromManualEntryButtonActionPerformed
+        //GEN-FIRST:event_backToBasketFromManualEntryButtonActionPerformed
         refreshBasketTable();
         layout.show(layoutPanel, "card3");
-    }
-
-    private void selectLanguageButtonActionPerformed(ActionEvent evt) {
+    }//GEN-LAST:event_backToBasketFromManualEntryButtonActionPerformed
+//GEN-LAST:event_backToBasketFromManualEntryButtonActionPerformed
+    private void selectLanguageButtonActionPerformed(ActionEvent evt) {//GEN-FIRST:event_selectLanguageButtonActionPerformed
+        //GEN-FIRST:event_selectLanguageButtonActionPerformed
         layout.show(layoutPanel, "card5");
-    }
-
-    private void polishLanguageButtonActionPerformed(ActionEvent evt) {
+    }//GEN-LAST:event_selectLanguageButtonActionPerformed
+//GEN-LAST:event_selectLanguageButtonActionPerformed
+    private void polishLanguageButtonActionPerformed(ActionEvent evt) {//GEN-FIRST:event_polishLanguageButtonActionPerformed
+        //GEN-FIRST:event_polishLanguageButtonActionPerformed
         PickedLanguage = "pl";
         updateTexts();
         layout.show(layoutPanel, "card2");
-    }
-
-    private void englishLanguageButtonActionPerformed(ActionEvent evt) {
+    }//GEN-LAST:event_polishLanguageButtonActionPerformed
+//GEN-LAST:event_polishLanguageButtonActionPerformed
+    private void englishLanguageButtonActionPerformed(ActionEvent evt) {//GEN-FIRST:event_englishLanguageButtonActionPerformed
+        //GEN-FIRST:event_englishLanguageButtonActionPerformed
         PickedLanguage = "en";
         updateTexts();
         layout.show(layoutPanel, "card2");
-    }
+    }//GEN-LAST:event_englishLanguageButtonActionPerformed
+//GEN-LAST:event_englishLanguageButtonActionPerformed
 
 
 
-
-    private void callHelpFunction() {
+    private void callHelpFunction() {//GEN-FIRST:event_callHelpFunction
+        //GEN-FIRST:event_callHelpFunction
         JOptionPane.showMessageDialog(
                 paymentPanel,
                 LanguageSetup.get(PickedLanguage, "alarm.help.info"),
                 LanguageSetup.get(PickedLanguage, "alarm.help"),
                 JOptionPane.INFORMATION_MESSAGE
         );
-    }
-
-    private void refreshBasketTable() {
+    }//GEN-LAST:event_callHelpFunction
+    //GEN-LAST:event_callHelpFunction
+    private void refreshBasketTable() {//GEN-FIRST:event_refreshBasketTable
+        //GEN-FIRST:event_refreshBasketTable
         DefaultTableModel model = (DefaultTableModel) jTable1.getModel();
         model.setRowCount(0);
         BigDecimal suma = BigDecimal.ZERO;
@@ -909,11 +948,11 @@ public class AppFrame extends JFrame {
         }
 
         jLabel2.setText(suma + " PLN");
-    }
+    }//GEN-LAST:event_refreshBasketTable
+//GEN-LAST:event_refreshBasketTable
 
 
-
-    private void updateTexts() {
+    private void updateTexts() {//GEN-FIRST:event_refreshBasketTable
         callHelpButton.setText(LanguageSetup.get(PickedLanguage, "menu.help"));
         callHelpButton2.setText(LanguageSetup.get(PickedLanguage, "menu.help"));
         selectLanguageButton.setText(LanguageSetup.get(PickedLanguage, "menu.language"));
@@ -936,7 +975,7 @@ public class AppFrame extends JFrame {
                 LanguageSetup.get(PickedLanguage, "column.quantity"),
                 LanguageSetup.get(PickedLanguage, "column.price")
         });
-    }
+    }//GEN-LAST:event_refreshBasketTable
 
     // Variables declaration - do not modify
     private javax.swing.JButton addProductManually;
