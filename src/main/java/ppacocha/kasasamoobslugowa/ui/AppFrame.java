@@ -11,13 +11,18 @@ import ppacocha.kasasamoobslugowa.util.PDFReportGenerator;
 import ppacocha.kasasamoobslugowa.util.ReceiptGenerator;
 import ppacocha.kasasamoobslugowa.util.LanguageSetup;
 import ppacocha.kasasamoobslugowa.ui.VirtualKeyboard;
+
+import javax.swing.border.Border;
 import javax.swing.event.DocumentListener;
 import javax.swing.event.DocumentEvent;
 import javax.swing.*;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableColumnModel;
 import java.awt.*;
 import java.awt.event.*;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
@@ -523,7 +528,7 @@ public class AppFrame extends JFrame {
         );
 
         layoutPanel.add(basketPanel, "card3");
-
+        beautifyBasketPanel();
         productCodeTextField.setText("Wprowadź kod produktu");
         productCodeTextField.addFocusListener(new java.awt.event.FocusAdapter() {
             public void focusGained(java.awt.event.FocusEvent evt) {
@@ -694,6 +699,141 @@ public class AppFrame extends JFrame {
 
         pack();
     }// </editor-fold>
+
+    private void beautifyBasketPanel() {
+        // 1) kolor z WCAG (ze swojego przycisku)
+        Color borderColor = gotoManualEntryButton.getBackground();
+
+        // 2) scrollpane
+        jScrollPane1.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        jScrollPane1.setBorder(null);
+        jScrollPane1.getViewport().setOpaque(false);
+
+        // 3) usuń wszelkie obramowania i wyłącz interakcję tabeli
+        jTable1.setBorder(null);
+        jTable1.setShowGrid(false);
+        jTable1.setIntercellSpacing(new Dimension(20, 0));
+        jTable1.setRowHeight(64);
+        jTable1.getTableHeader().setVisible(false);
+        jTable1.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+        jTable1.setEnabled(false);
+        jTable1.setFocusable(false);
+        jTable1.setRowSelectionAllowed(false);
+        jTable1.setColumnSelectionAllowed(false);
+        jTable1.setCellSelectionEnabled(false);
+        jTable1.setDefaultEditor(Object.class, null);
+
+        // 4) fonty i renderery
+        Font bigFont = new Font("Segoe UI", Font.BOLD, 32);
+        jTable1.setFont(bigFont);
+
+        DefaultTableCellRenderer bigRenderer = new DefaultTableCellRenderer();
+        bigRenderer.setFont(bigFont);
+        bigRenderer.setOpaque(false);
+        bigRenderer.setForeground(new Color(0x2B2B2B));
+        bigRenderer.setHorizontalAlignment(SwingConstants.LEFT);
+
+        Font qtyFont = new Font("Segoe UI", Font.PLAIN, 18);
+        DefaultTableCellRenderer qtyRenderer = new DefaultTableCellRenderer();
+        qtyRenderer.setFont(qtyFont);
+        qtyRenderer.setOpaque(false);
+        qtyRenderer.setForeground(new Color(0x2B2B2B));
+        qtyRenderer.setHorizontalAlignment(SwingConstants.CENTER);
+
+        // renderer, który dokleja " PLN"
+        DefaultTableCellRenderer priceRenderer = new DefaultTableCellRenderer() {
+            @Override
+            protected void setValue(Object value) {
+                if (value != null) {
+                    super.setValue(value.toString() + " PLN");
+                } else {
+                    super.setValue("");
+                }
+            }
+        };
+        priceRenderer.setFont(bigFont);
+        priceRenderer.setOpaque(false);
+        priceRenderer.setForeground(new Color(0x2B2B2B));
+        priceRenderer.setHorizontalAlignment(SwingConstants.RIGHT);
+
+        // przypisz renderery do kolumn
+        TableColumnModel cm = jTable1.getColumnModel();
+        cm.getColumn(0).setCellRenderer(bigRenderer);
+        cm.getColumn(1).setCellRenderer(qtyRenderer);
+        cm.getColumn(2).setCellRenderer(priceRenderer);
+
+        // 5) panel z tabelą w grubym, zaokrąglonym obramowaniu i lewym marginesem
+        JPanel tablePanel = new JPanel(new BorderLayout());
+        Border inset   = BorderFactory.createEmptyBorder(0, 20, 10, 10);
+        Border outline = BorderFactory.createLineBorder(borderColor, 12, true);
+        tablePanel.setBorder(BorderFactory.createCompoundBorder(inset, outline));
+        tablePanel.add(jScrollPane1, BorderLayout.CENTER);
+
+        // 6) wiersz sumy – ta sama wysokość i font co w tabeli
+        jLabel2.setFont(bigFont);
+        JPanel sumPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        sumPanel.setOpaque(false);
+        sumPanel.setPreferredSize(new Dimension(0, jTable1.getRowHeight()));
+        sumPanel.setBorder(BorderFactory.createMatteBorder(4, 0, 0, 0, borderColor));
+        sumPanel.add(jLabel2);
+        tablePanel.add(sumPanel, BorderLayout.SOUTH);
+
+        // 7) na zmianę rozmiaru zachowaj proporcje 70/5/25%
+        tablePanel.addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                int w = tablePanel.getWidth();
+                cm.getColumn(0).setPreferredWidth((int)(w * 0.65));
+                cm.getColumn(1).setPreferredWidth((int)(w * 0.10));
+                cm.getColumn(2).setPreferredWidth((int)(w * 0.25));
+            }
+        });
+
+        // 8) prawy panel z przyciskami
+        JPanel controls = new JPanel();
+        controls.setOpaque(false);
+        controls.setLayout(new BoxLayout(controls, BoxLayout.Y_AXIS));
+        controls.add(Box.createVerticalStrut(10));
+        controls.add(gotoManualEntryButton);
+        controls.add(Box.createVerticalStrut(10));
+        controls.add(loyaltyCardButton);
+        controls.add(Box.createVerticalStrut(20));
+        controls.add(gotoPaymentButton);
+        controls.add(Box.createVerticalGlue());
+
+        // 9) połącz w JSplitPane bez możliwości przesuwania
+        JSplitPane sp = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, tablePanel, controls);
+        sp.setResizeWeight(0.40);
+        sp.setDividerSize(0);
+        sp.setEnabled(false);
+        sp.setBorder(null);
+
+        // 10) dodatkowe marginesy od dołu i prawej
+        JPanel centerWrapper = new JPanel(new BorderLayout());
+        centerWrapper.setOpaque(false);
+        centerWrapper.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 10));
+        centerWrapper.add(sp, BorderLayout.CENTER);
+
+        // 11) odbuduj basketPanel
+        basketPanel.removeAll();
+        basketPanel.setLayout(new BorderLayout());
+        basketPanel.add(centerWrapper, BorderLayout.CENTER);
+
+        // stopka z przyciskiem Pomoc
+        JPanel footer = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        footer.setOpaque(false);
+        footer.add(callHelpButton2);
+        basketPanel.add(footer, BorderLayout.SOUTH);
+
+        basketPanel.revalidate();
+        basketPanel.repaint();
+    }
+
+
+
+
+
+
     private void callHelpButtonActionPerformed(ActionEvent evt) {//GEN-FIRST:event_callHelpButtonActionPerformed
         //GEN-FIRST:event_callHelpButtonActionPerformed
         callHelpFunction();
@@ -926,7 +1066,6 @@ public class AppFrame extends JFrame {
     }//GEN-LAST:event_callHelpFunction
     //GEN-LAST:event_callHelpFunction
     private void refreshBasketTable() {//GEN-FIRST:event_refreshBasketTable
-        //GEN-FIRST:event_refreshBasketTable
         DefaultTableModel model = (DefaultTableModel) jTable1.getModel();
         model.setRowCount(0);
         BigDecimal suma = BigDecimal.ZERO;
@@ -941,14 +1080,19 @@ public class AppFrame extends JFrame {
         for (var e : ilosci.entrySet()) {
             Produkt p = produktyMap.get(e.getKey());
             int qty = e.getValue();
-            BigDecimal cena = kasaService.getPriceWithDiscount(p);
+            BigDecimal cena  = kasaService.getPriceWithDiscount(p);
             BigDecimal razem = cena.multiply(BigDecimal.valueOf(qty));
             suma = suma.add(razem);
-            model.addRow(new Object[]{ p.getNazwa(), qty, razem });
+
+            // nowa logika:
+            String qtyStr   = qty + "x";
+            String priceStr = razem.setScale(2, RoundingMode.HALF_UP).toPlainString() + " PLN";
+            model.addRow(new Object[]{ p.getNazwa(), qtyStr, priceStr });
         }
 
-        jLabel2.setText(suma + " PLN");
-    }//GEN-LAST:event_refreshBasketTable
+        jLabel2.setText(suma.setScale(2, RoundingMode.HALF_UP).toPlainString() + " PLN");
+    }
+//GEN-LAST:event_refreshBasketTable
 //GEN-LAST:event_refreshBasketTable
 
 

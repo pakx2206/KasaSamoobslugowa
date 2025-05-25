@@ -18,9 +18,8 @@ public final class AppTheme {
     public static final Font FONT_LABEL   = new Font("Segoe UI", Font.PLAIN, 14);
     public static final Font FONT_BUTTON  = new Font("Segoe UI", Font.BOLD, 20);
 
-    public static final Dimension BUTTON_SIZE = new Dimension(120, 120);
-
-    public static final Border FOCUS_BORDER = BorderFactory.createLineBorder(ACCENT, 3);
+    public static final Dimension BUTTON_SIZE = new Dimension(120, 64);
+    public static final Border FOCUS_BORDER   = BorderFactory.createLineBorder(ACCENT, 3);
 
     private AppTheme() {}
 

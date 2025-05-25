@@ -34,6 +34,12 @@
       <artifactId>pdfbox</artifactId>
       <version>2.0.29</version>
     </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-simple</artifactId>
+      <version>2.0.7</version>
+    </dependency>
+
   </dependencies>
   
   <build>
@@ -44,6 +50,7 @@
         <version>3.1.0</version>
         <configuration>
           <mainClass>ppacocha.kasasamoobslugowa.App</mainClass>
+          <classpathScope>runtime</classpathScope>
         </configuration>
       </plugin>
     </plugins>
