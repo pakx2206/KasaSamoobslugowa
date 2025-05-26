@@ -1,49 +1,44 @@
 package ppacocha.kasasamoobslugowa.ui;
 
-import javax.swing.BorderFactory;
-import javax.swing.UIManager;
-import javax.swing.border.Border;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Font;
+import javax.swing.*;
+import java.awt.*;
 
-public final class AppTheme {
-    public static final Color PRIMARY_BG        = new Color(0x003366);
-    public static final Color SECONDARY_BG      = new Color(0xE6E6E6);
-    public static final Color ACCENT            = new Color(0x009933);
-    public static final Color TEXT_ON_PRIMARY   = Color.WHITE;
-    public static final Color TEXT_ON_SECONDARY = Color.BLACK;
-
-    public static final Font FONT_HEADER  = new Font("Segoe UI", Font.BOLD, 18);
-    public static final Font FONT_LABEL   = new Font("Segoe UI", Font.PLAIN, 14);
-    public static final Font FONT_BUTTON  = new Font("Segoe UI", Font.BOLD, 20);
-
-    public static final Dimension BUTTON_SIZE = new Dimension(120, 64);
-    public static final Border FOCUS_BORDER   = BorderFactory.createLineBorder(ACCENT, 3);
-
-    private AppTheme() {}
-
+public class AppTheme {
+    public static final Color BACKGROUND               = new Color(0xFFFFFF);
+    public static final Color SECONDARY_BACKGROUND     = new Color(0xF5F5F5);
+    public static final Color TEXT_COLOR               = new Color(0x2B2B2B);
+    public static final Color PRIMARY_BUTTON_BG        = new Color(0x005A9C);
+    public static final Color PRIMARY_BUTTON_FG        = new Color(0xFFFFFF);
+    public static final Color SECONDARY_BUTTON_BG      = new Color(0x007A33);
+    public static final Color SECONDARY_BUTTON_FG      = new Color(0xFFFFFF);
+    public static final Color BORDER_COLOR             = new Color(0xCCCCCC);
+    public static final Font FONT_LARGE_BOLD           = new Font("Segoe UI", Font.BOLD,   36);
+    public static final Font FONT_MEDIUM_BOLD          = new Font("Segoe UI", Font.BOLD,   24);
+    public static final Font FONT_MEDIUM               = new Font("Segoe UI", Font.PLAIN,   24);
+    public static final Dimension BUTTON_SIZE          = new Dimension(300, 200);
+    public static final int TABLE_ROW_HEIGHT           = 80;
     public static void setupDefaults() {
-        UIManager.put("Button.font", FONT_BUTTON);
-        UIManager.put("Button.background", PRIMARY_BG);
-        UIManager.put("Button.foreground", TEXT_ON_PRIMARY);
-        UIManager.put("Button.focus", FOCUS_BORDER);
-        UIManager.put("Button.minimumSize", BUTTON_SIZE);
-        UIManager.put("Button.preferredSize", BUTTON_SIZE);
-
-        UIManager.put("Label.font", FONT_LABEL);
-        UIManager.put("Label.foreground", TEXT_ON_SECONDARY);
-
-        UIManager.put("Panel.background", SECONDARY_BG);
-
-        UIManager.put("Table.font", FONT_LABEL);
-        UIManager.put("Table.foreground", TEXT_ON_SECONDARY);
-        UIManager.put("Table.background", SECONDARY_BG);
-        UIManager.put("Table.gridColor", PRIMARY_BG);
-
-        UIManager.put("TextField.font", FONT_LABEL);
-        UIManager.put("TextField.background", Color.WHITE);
-        UIManager.put("TextField.foreground", TEXT_ON_SECONDARY);
-        UIManager.put("TextField.focus", FOCUS_BORDER);
+        UIManager.put("Panel.background",             BACKGROUND);
+        UIManager.put("ScrollPane.background",        SECONDARY_BACKGROUND);
+        UIManager.put("Label.background",             BACKGROUND);
+        UIManager.put("Label.foreground",             TEXT_COLOR);
+        UIManager.put("Label.font",                   FONT_MEDIUM);
+        UIManager.put("Button.background",            PRIMARY_BUTTON_BG);
+        UIManager.put("Button.foreground",            PRIMARY_BUTTON_FG);
+        UIManager.put("Button.font",                  FONT_MEDIUM_BOLD);
+        UIManager.put("Button.focus",                 PRIMARY_BUTTON_BG.darker());
+        UIManager.put("TextField.background",         Color.WHITE);
+        UIManager.put("TextField.foreground",         TEXT_COLOR);
+        UIManager.put("TextField.font",               FONT_MEDIUM);
+        UIManager.put("Table.background",             BACKGROUND);
+        UIManager.put("Table.foreground",             TEXT_COLOR);
+        UIManager.put("Table.font",                   FONT_LARGE_BOLD);
+        UIManager.put("Table.rowHeight",              TABLE_ROW_HEIGHT);
+        UIManager.put("Table.selectionBackground",    PRIMARY_BUTTON_BG.darker());
+        UIManager.put("Table.selectionForeground",    PRIMARY_BUTTON_FG);
+        UIManager.put("TableHeader.background",       SECONDARY_BACKGROUND);
+        UIManager.put("TableHeader.foreground",       TEXT_COLOR);
+        UIManager.put("TableHeader.font",             FONT_MEDIUM_BOLD);
+        UIManager.put("SplitPane.background",         SECONDARY_BACKGROUND);
     }
 }

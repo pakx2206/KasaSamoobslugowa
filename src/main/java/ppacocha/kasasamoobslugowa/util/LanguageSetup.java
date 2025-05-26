@@ -30,6 +30,7 @@ public class LanguageSetup {
         pl.put("language.en",                "Angielski");
         pl.put("column.productName",         "Nazwa Produktu");
         pl.put("column.quantity",            "Ilosc");
+        pl.put("column.unitPrice",            "Cena jedn.");
         pl.put("column.price",               "Cena");
         pl.put("added.product",              "Dodano produkt: ");
         pl.put("write.barCode",              "Wpisz fragment kodu kreskowego.");
@@ -50,13 +51,15 @@ public class LanguageSetup {
         pl.put("goTo.languagePanel",           "Przechodzę do wyboru języka");
         pl.put("nip",                          "Wprowadź NIP nabywcy (opcjonalnie): ");
         pl.put("loyalty.card",                 "Karta lojalnościowa");
-        pl.put("loyalty.prompt",                 "Podaj numer karty lojalnościowej:");
+        pl.put("loyalty.prompt",                 "Zeskanuj kartę lub wpisz numer telefonu:");
         pl.put("loyalty.success",                 "Zniżka lojalnościowa została zastosowana");
     // Komunikaty NFC i błędów
         pl.put("NFCScanner.connection.error", "Nie można uruchomić czytnika NFC");
         pl.put("NFCScanner.error",            "Błąd NFC: ");
         pl.put("NFCScan.confirmation",        "Zeskanowano NFC: ");
         pl.put("error",                       "Błąd");
+        pl.put("button.ok",     "OK");
+        pl.put("button.cancel", "Anuluj");
 
     }
     //Język Angielski
@@ -80,6 +83,7 @@ public class LanguageSetup {
         en.put("language.en",                "English");
         en.put("column.productName",         "Product Name");
         en.put("column.quantity",            "Quantity");
+        en.put("column.unitPrice",           "Unit price");
         en.put("column.price",               "Price");
         en.put("added.product",              "Added product: ");
         en.put("back.cart",                  "Back to cart panel");
@@ -100,13 +104,15 @@ public class LanguageSetup {
         en.put("goTo.languagePanel",           "Going to choose a language panel");
         en.put("nip",                          "Enter the buyer's NIP (optional): ");
         en.put("loyalty.card",                 "Loyalty card");
-        en.put("loyalty.prompt",                 "Put your loyalty card number:");
+        en.put("loyalty.prompt",                 "Scan your card or enter your phone number:");
         en.put("loyalty.success",                 "Sale discount was applied.");
     // NFC & error messages
         en.put("NFCScanner.connection.error", "Cannot initialize NFC reader");
         en.put("NFCScanner.error",            "NFC Error");
         en.put("NFCScan.confirmation",        "NFC scanned: ");
         en.put("error",                       "Error");
+        en.put("button.ok",     "OK");
+        en.put("button.cancel", "Cancel");
 
 
 

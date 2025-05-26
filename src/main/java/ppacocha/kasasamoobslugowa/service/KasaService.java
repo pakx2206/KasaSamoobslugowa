@@ -58,6 +58,9 @@ public class KasaService {
         this.ageVerified   = true;
         this.ageVerifiedAt = LocalDateTime.now();
     }
+    public List<Produkt> getAllProducts() {
+        return produktDao.findAll();
+    }
 
     public List<Produkt> szukajPoKodLubNazwie(String fragment) {
         return produktDao.findByCodeOrNameContaining(fragment);
@@ -115,7 +118,6 @@ public class KasaService {
 
         Transakcja tx = new Transakcja(items, typPlatnosci);
         tx.setSuma(total);
-        // opcjonalnie: możesz tu przekazać do transakcji timestamp weryfikacji:
         tx.setAgeVerifiedAt(ageVerifiedAt);
 
         String id = transakcjaDao.save(tx);
@@ -123,7 +125,6 @@ public class KasaService {
 
         ilosci.forEach((kod, qty) -> produktDao.zmniejszStan(kod, qty));
 
-        // resetuje flagi i koszyk
         resetSession();
         return tx;
     }

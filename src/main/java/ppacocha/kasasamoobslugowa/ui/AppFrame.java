@@ -10,7 +10,6 @@ import ppacocha.kasasamoobslugowa.service.RaportService;
 import ppacocha.kasasamoobslugowa.util.PDFReportGenerator;
 import ppacocha.kasasamoobslugowa.util.ReceiptGenerator;
 import ppacocha.kasasamoobslugowa.util.LanguageSetup;
-import ppacocha.kasasamoobslugowa.ui.VirtualKeyboard;
 
 import javax.swing.border.Border;
 import javax.swing.event.DocumentListener;
@@ -23,7 +22,6 @@ import java.awt.*;
 import java.awt.event.*;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -44,6 +42,7 @@ public class AppFrame extends JFrame {
     private final JButton printReportButton = new JButton("Drukuj raport");
     private JList<Produkt> productList;
     private DefaultListModel<Produkt> productListModel;
+    private VirtualKeyboardPanel kb;
     private boolean loyaltyApplied = false;
     public AppFrame() {
 
@@ -80,7 +79,7 @@ public class AppFrame extends JFrame {
         layout = new CardLayout();
         AppTheme.setupDefaults();
         initComponents();
-        getContentPane().setBackground(AppTheme.SECONDARY_BG);
+        getContentPane().setBackground(AppTheme.SECONDARY_BACKGROUND);
         setLocationRelativeTo(null);
         setSize(1920, 1080);
         reInitCardLayout();
@@ -96,13 +95,14 @@ public class AppFrame extends JFrame {
         inputPanel.add(searchForProductButton,   BorderLayout.EAST);
         topBar.add(inputPanel, BorderLayout.CENTER);
         JScrollPane scroll = new JScrollPane(productList);
-        VirtualKeyboardPanel kb = new VirtualKeyboardPanel(productCodeTextField, true);
+        kb = new VirtualKeyboardPanel(productCodeTextField, true, PickedLanguage);
+        manualProductEntryPanel.add(kb, BorderLayout.SOUTH);
         manualProductEntryPanel.add(topBar, BorderLayout.NORTH);
         manualProductEntryPanel.add(scroll,  BorderLayout.CENTER);
         manualProductEntryPanel.add(kb,      BorderLayout.SOUTH);
         manualProductEntryPanel.revalidate();
         manualProductEntryPanel.repaint();
-        layout.show(layoutPanel, "card4");
+        layout.show(layoutPanel, "cardSearch");
 
         updateTexts();
         layout.show(layoutPanel, "card2");
@@ -147,9 +147,12 @@ public class AppFrame extends JFrame {
             if (loyaltyApplied) return;
 
             String code = NumericInputDialog.showNumericDialog(
-                    AppFrame.this,
-                    LanguageSetup.get(PickedLanguage, "loyalty.prompt")
+                    this,
+                    PickedLanguage,
+                    "loyalty.prompt",
+                    true
             );
+
             if (code != null && !code.isBlank()) {
                 try {
                     kasaService.applyLoyaltyCard(code);
@@ -173,8 +176,6 @@ public class AppFrame extends JFrame {
             }
         });
 
-
-        //NFC scanner
         try {
             reader = new CardReaderNdef();
         } catch (Exception e) {
@@ -235,7 +236,18 @@ public class AppFrame extends JFrame {
     private void reInitCardLayout() {
         layoutPanel.add(startingPanel, "card2");
         layoutPanel.add(basketPanel, "card3");
-        layoutPanel.add(manualProductEntryPanel, "card4");
+        ProductSearchPanel searchPanel = new ProductSearchPanel(
+                PickedLanguage,
+                kasaService,
+                () -> layout.show(layoutPanel, "card3"),
+                code -> {
+                    handleScan(code);
+                    refreshBasketTable();
+                    layout.show(layoutPanel, "card3");
+                }
+        );
+        layoutPanel.add(searchPanel, "cardSearch");
+
         layoutPanel.add(languageSelectionPanel, "card5");
         layoutPanel.add(paymentPanel, "card6");
     }
@@ -329,7 +341,7 @@ public class AppFrame extends JFrame {
         pack();
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
-        layoutPanel.setBackground(AppTheme.SECONDARY_BG);
+        layoutPanel.setBackground(AppTheme.SECONDARY_BACKGROUND);
         layoutPanel.setLayout(new java.awt.CardLayout());
         layoutPanel.setLayout(this.layout);
 
@@ -383,7 +395,7 @@ public class AppFrame extends JFrame {
                                 .addContainerGap())
                         .addGroup(startingPanelLayout.createSequentialGroup()
                                 .addContainerGap(302, Short.MAX_VALUE)
-                                .addComponent(startCheckout, javax.swing.GroupLayout.PREFERRED_SIZE, 478, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addComponent(startCheckout, javax.swing.GroupLayout.PREFERRED_SIZE, 956, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addContainerGap(324, Short.MAX_VALUE))
         );
         startingPanelLayout.setVerticalGroup(
@@ -392,7 +404,7 @@ public class AppFrame extends JFrame {
                                 .addContainerGap()
                                 .addComponent(topRightPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 278, Short.MAX_VALUE)
-                                .addComponent(startCheckout, javax.swing.GroupLayout.PREFERRED_SIZE, 115, javax.swing.GroupLayout.PREFERRED_SIZE)
+                                .addComponent(startCheckout, javax.swing.GroupLayout.PREFERRED_SIZE, 230, javax.swing.GroupLayout.PREFERRED_SIZE)
                                 .addContainerGap(160, Short.MAX_VALUE))
         );
 
@@ -400,38 +412,33 @@ public class AppFrame extends JFrame {
 
         jTable1.setModel(new javax.swing.table.DefaultTableModel(
                 new Object [][] {
-                        {null, null, null},
-                        {null, null, null},
-                        {null, null, null},
-                        {null, null, null},
-                        {null, null, null},
-                        {null, null, null},
-                        {null, null, null},
-                        {null, null, null},
-                        {null, null, null},
-                        {null, null, null},
-                        {null, null, null},
-                        {null, null, null},
-                        {null, null, null},
-                        {null, null, null},
-                        {null, null, null},
-                        {null, null, null},
-                        {null, null, null},
-                        {null, null, null},
-                        {null, null, null},
-                        {null, null, null}
+                        {null, null, null, null},
+                        {null, null, null, null},
+                        {null, null, null, null},
+                        {null, null, null, null},
+                        {null, null, null, null},
+                        {null, null, null, null},
+                        {null, null, null, null},
+                        {null, null, null, null},
+                        {null, null, null, null},
+                        {null, null, null, null},
+                        {null, null, null, null},
+                        {null, null, null, null},
+                        {null, null, null, null},
+                        {null, null, null, null},
+                        {null, null, null, null},
+                        {null, null, null, null},
+                        {null, null, null, null},
+                        {null, null, null, null},
+                        {null, null, null, null},
+                        {null, null, null, null},
                 },
                 new String [] {
-                        "Nazwa Produktu", "Ilosc", "Cena"
+                        "Nazwa Produktu", "Ilość", "Cena jedn.", "Cena"
                 }
         ) {
-            boolean[] canEdit = new boolean [] {
-                    false, false, false
-            };
-
-            public boolean isCellEditable(int rowIndex, int columnIndex) {
-                return canEdit [columnIndex];
-            }
+            boolean[] canEdit = new boolean[] { false, false, false, false };
+            public boolean isCellEditable(int r, int c) { return canEdit[c]; }
         });
         jTable1.setRowHeight(40);
         jScrollPane1.setViewportView(jTable1);
@@ -464,7 +471,7 @@ public class AppFrame extends JFrame {
         jPanel1.setBackground(new java.awt.Color(204, 204, 204));
 
         jLabel2.setBackground(new java.awt.Color(204, 204, 204));
-        jLabel2.setFont(new java.awt.Font("Segoe UI", 0, 36)); // NOI18N
+        jLabel2.setFont(new java.awt.Font("Segoe UI", 0, 36));
         jLabel2.setForeground(new java.awt.Color(0, 0, 0));
         jLabel2.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         jLabel2.setText("505250.50 PLN");
@@ -538,6 +545,7 @@ public class AppFrame extends JFrame {
                 productCodeTextFieldFocusLost(evt);
             }
         });
+
         productCodeTextField.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 productCodeTextFieldActionPerformed(evt);
@@ -551,7 +559,7 @@ public class AppFrame extends JFrame {
             }
         });
 
-        productNameLabel.setFont(new java.awt.Font("Segoe UI", 0, 18)); // NOI18N
+        productNameLabel.setFont(new java.awt.Font("Segoe UI", 0, 18));
         productNameLabel.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
 
         addProductManually.setText("Dodaj produkt");
@@ -701,54 +709,41 @@ public class AppFrame extends JFrame {
     }// </editor-fold>
 
     private void beautifyBasketPanel() {
-        // 1) kolor z WCAG (ze swojego przycisku)
         Color borderColor = gotoManualEntryButton.getBackground();
 
-        // 2) scrollpane
         jScrollPane1.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
         jScrollPane1.setBorder(null);
         jScrollPane1.getViewport().setOpaque(false);
 
-        // 3) usuń wszelkie obramowania i wyłącz interakcję tabeli
         jTable1.setBorder(null);
         jTable1.setShowGrid(false);
         jTable1.setIntercellSpacing(new Dimension(20, 0));
-        jTable1.setRowHeight(64);
+        jTable1.setRowHeight(80);
         jTable1.getTableHeader().setVisible(false);
         jTable1.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         jTable1.setEnabled(false);
         jTable1.setFocusable(false);
-        jTable1.setRowSelectionAllowed(false);
-        jTable1.setColumnSelectionAllowed(false);
-        jTable1.setCellSelectionEnabled(false);
-        jTable1.setDefaultEditor(Object.class, null);
 
-        // 4) fonty i renderery
-        Font bigFont = new Font("Segoe UI", Font.BOLD, 32);
+        Font bigFont = new Font("Segoe UI", Font.BOLD, 36);
         jTable1.setFont(bigFont);
 
-        DefaultTableCellRenderer bigRenderer = new DefaultTableCellRenderer();
-        bigRenderer.setFont(bigFont);
-        bigRenderer.setOpaque(false);
-        bigRenderer.setForeground(new Color(0x2B2B2B));
-        bigRenderer.setHorizontalAlignment(SwingConstants.LEFT);
+        DefaultTableCellRenderer nameRenderer = new DefaultTableCellRenderer();
+        nameRenderer.setFont(bigFont);
+        nameRenderer.setOpaque(false);
+        nameRenderer.setForeground(new Color(0x2B2B2B));
+        nameRenderer.setHorizontalAlignment(SwingConstants.LEFT);
 
-        Font qtyFont = new Font("Segoe UI", Font.PLAIN, 18);
+        Font qtyFont = new Font("Segoe UI", Font.PLAIN, 24);
         DefaultTableCellRenderer qtyRenderer = new DefaultTableCellRenderer();
         qtyRenderer.setFont(qtyFont);
         qtyRenderer.setOpaque(false);
         qtyRenderer.setForeground(new Color(0x2B2B2B));
         qtyRenderer.setHorizontalAlignment(SwingConstants.CENTER);
 
-        // renderer, który dokleja " PLN"
         DefaultTableCellRenderer priceRenderer = new DefaultTableCellRenderer() {
             @Override
             protected void setValue(Object value) {
-                if (value != null) {
-                    super.setValue(value.toString() + " PLN");
-                } else {
-                    super.setValue("");
-                }
+                super.setValue(value == null ? "" : value.toString());
             }
         };
         priceRenderer.setFont(bigFont);
@@ -756,20 +751,18 @@ public class AppFrame extends JFrame {
         priceRenderer.setForeground(new Color(0x2B2B2B));
         priceRenderer.setHorizontalAlignment(SwingConstants.RIGHT);
 
-        // przypisz renderery do kolumn
         TableColumnModel cm = jTable1.getColumnModel();
-        cm.getColumn(0).setCellRenderer(bigRenderer);
+        cm.getColumn(0).setCellRenderer(nameRenderer);
         cm.getColumn(1).setCellRenderer(qtyRenderer);
         cm.getColumn(2).setCellRenderer(priceRenderer);
+        cm.getColumn(3).setCellRenderer(priceRenderer);
 
-        // 5) panel z tabelą w grubym, zaokrąglonym obramowaniu i lewym marginesem
         JPanel tablePanel = new JPanel(new BorderLayout());
         Border inset   = BorderFactory.createEmptyBorder(0, 20, 10, 10);
         Border outline = BorderFactory.createLineBorder(borderColor, 12, true);
         tablePanel.setBorder(BorderFactory.createCompoundBorder(inset, outline));
         tablePanel.add(jScrollPane1, BorderLayout.CENTER);
 
-        // 6) wiersz sumy – ta sama wysokość i font co w tabeli
         jLabel2.setFont(bigFont);
         JPanel sumPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         sumPanel.setOpaque(false);
@@ -778,97 +771,95 @@ public class AppFrame extends JFrame {
         sumPanel.add(jLabel2);
         tablePanel.add(sumPanel, BorderLayout.SOUTH);
 
-        // 7) na zmianę rozmiaru zachowaj proporcje 70/5/25%
         tablePanel.addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
                 int w = tablePanel.getWidth();
-                cm.getColumn(0).setPreferredWidth((int)(w * 0.65));
-                cm.getColumn(1).setPreferredWidth((int)(w * 0.10));
-                cm.getColumn(2).setPreferredWidth((int)(w * 0.25));
+                cm.getColumn(0).setPreferredWidth((int)(w * 0.55));
+                cm.getColumn(1).setPreferredWidth((int)(w * 0.06));
+                cm.getColumn(2).setPreferredWidth((int)(w * 0.185));
+                cm.getColumn(3).setPreferredWidth((int)(w * 0.185));
             }
         });
 
-        // 8) prawy panel z przyciskami
+        Dimension btnSize = new Dimension(300,200);
+        for (JButton b : new JButton[]{gotoManualEntryButton, loyaltyCardButton, gotoPaymentButton, callHelpButton2}) {
+            b.setPreferredSize(btnSize);
+            b.setMaximumSize(btnSize);
+            b.setMinimumSize(btnSize);
+            b.setAlignmentX(Component.CENTER_ALIGNMENT);
+        }
+
         JPanel controls = new JPanel();
         controls.setOpaque(false);
         controls.setLayout(new BoxLayout(controls, BoxLayout.Y_AXIS));
-        controls.add(Box.createVerticalStrut(10));
+
+        controls.add(Box.createVerticalStrut(50));
+
         controls.add(gotoManualEntryButton);
-        controls.add(Box.createVerticalStrut(10));
+        controls.add(Box.createVerticalStrut(40));
+
         controls.add(loyaltyCardButton);
-        controls.add(Box.createVerticalStrut(20));
+        controls.add(Box.createVerticalStrut(40));
+
         controls.add(gotoPaymentButton);
         controls.add(Box.createVerticalGlue());
 
-        // 9) połącz w JSplitPane bez możliwości przesuwania
+        controls.add(Box.createVerticalStrut(40));
+        controls.add(callHelpButton2);
+        controls.add(Box.createVerticalStrut(50));
+
         JSplitPane sp = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, tablePanel, controls);
-        sp.setResizeWeight(0.40);
+        sp.setResizeWeight(0.75);
+        sp.setDividerLocation(0.75);
         sp.setDividerSize(0);
         sp.setEnabled(false);
         sp.setBorder(null);
 
-        // 10) dodatkowe marginesy od dołu i prawej
         JPanel centerWrapper = new JPanel(new BorderLayout());
         centerWrapper.setOpaque(false);
         centerWrapper.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 10));
         centerWrapper.add(sp, BorderLayout.CENTER);
 
-        // 11) odbuduj basketPanel
         basketPanel.removeAll();
         basketPanel.setLayout(new BorderLayout());
         basketPanel.add(centerWrapper, BorderLayout.CENTER);
-
-        // stopka z przyciskiem Pomoc
-        JPanel footer = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        footer.setOpaque(false);
-        footer.add(callHelpButton2);
-        basketPanel.add(footer, BorderLayout.SOUTH);
 
         basketPanel.revalidate();
         basketPanel.repaint();
     }
 
-
-
-
-
-
-    private void callHelpButtonActionPerformed(ActionEvent evt) {//GEN-FIRST:event_callHelpButtonActionPerformed
+    //GEN-LAST:event_beautifyBasketPanel
+    private void callHelpButtonActionPerformed(ActionEvent evt) {
         //GEN-FIRST:event_callHelpButtonActionPerformed
         callHelpFunction();
     }//GEN-LAST:event_callHelpButtonActionPerformed
-//GEN-LAST:event_callHelpButtonActionPerformed
-    private void callHelpButton2ActionPerformed(ActionEvent evt) {//GEN-FIRST:event_callHelpButton2ActionPerformed
+    private void callHelpButton2ActionPerformed(ActionEvent evt) {
         //GEN-FIRST:event_callHelpButton2ActionPerformed
         callHelpFunction();
     }//GEN-LAST:event_callHelpButton2ActionPerformed
-//GEN-LAST:event_callHelpButton2ActionPerformed
-    private void gotoManualEntryButtonActionPerformed(ActionEvent evt) {//GEN-FIRST:event_gotoManualEntryButtonActionPerformed
+    private void gotoManualEntryButtonActionPerformed(ActionEvent evt) {
         //GEN-FIRST:event_gotoManualEntryButtonActionPerformed
         System.out.println(LanguageSetup.get(PickedLanguage, "goTo.manual"));
         refreshBasketTable();
-        layout.show(layoutPanel, "card4");
+        layout.show(layoutPanel, "cardSearch");
+
     }//GEN-LAST:event_gotoManualEntryButtonActionPerformed
-//GEN-LAST:event_gotoManualEntryButtonActionPerformed
-    private void productCodeTextFieldFocusGained(FocusEvent evt) {//GEN-FIRST:event_productCodeTextFieldFocusGained
+    private void productCodeTextFieldFocusGained(FocusEvent evt) {
         //GEN-FIRST:event_productCodeTextFieldFocusGained
         if (productCodeTextField.getText().equals(LanguageSetup.get(PickedLanguage,"input.code")))
             productCodeTextField.setText("");
     }//GEN-LAST:event_productCodeTextFieldFocusGained
-//GEN-LAST:event_productCodeTextFieldFocusGained
-    private void productCodeTextFieldFocusLost(FocusEvent evt) {//GEN-FIRST:event_productCodeTextFieldFocusLost
+    private void productCodeTextFieldFocusLost(FocusEvent evt) {
         //GEN-FIRST:event_productCodeTextFieldFocusLost
         if (productCodeTextField.getText().isEmpty())
             productCodeTextField.setText(LanguageSetup.get(PickedLanguage,"input.code"));
     }//GEN-LAST:event_productCodeTextFieldFocusLost
-//GEN-LAST:event_productCodeTextFieldFocusLost
-    private void productCodeTextFieldActionPerformed(ActionEvent evt) {//GEN-FIRST:event_productCodeTextFieldActionPerformed
+    private void productCodeTextFieldActionPerformed(ActionEvent evt) {
         //GEN-FIRST:event_productCodeTextFieldActionPerformed
         addProductManuallyActionPerformed(evt);
     }//GEN-LAST:event_productCodeTextFieldActionPerformed
-//GEN-LAST:event_productCodeTextFieldActionPerformed
-    private void startCheckoutActionPerformed(ActionEvent evt) {//GEN-FIRST:event_startCheckoutActionPerformed
+    private void startCheckoutActionPerformed(ActionEvent evt) {
         //GEN-FIRST:event_startCheckoutActionPerformed
         refreshBasketTable();
         layout.show(layoutPanel, "card3");
@@ -907,8 +898,7 @@ public class AppFrame extends JFrame {
             nfcThread.start();
         }
     }//GEN-LAST:event_startCheckoutActionPerformed
-//GEN-LAST:event_startCheckoutActionPerformed
-    private void searchForProductButtonActionPerformed(ActionEvent evt) {//GEN-FIRST:event_searchForProductButtonActionPerformed
+    private void searchForProductButtonActionPerformed(ActionEvent evt) {
         //GEN-FIRST:event_searchForProductButtonActionPerformed
         String partial = productCodeTextField.getText().trim();
         if (partial.isEmpty()) {
@@ -941,8 +931,7 @@ public class AppFrame extends JFrame {
             layout.show(layoutPanel, "card3");
         }
     }//GEN-LAST:event_searchForProductButtonActionPerformed
-//GEN-LAST:event_searchForProductButtonActionPerformed
-    private void addProductManuallyActionPerformed(ActionEvent evt) {//GEN-FIRST:event_addProductManuallyActionPerformed
+    private void addProductManuallyActionPerformed(ActionEvent evt) {
         //GEN-FIRST:event_addProductManuallyActionPerformed
         String code = productCodeTextField.getText().trim();
         try {
@@ -954,23 +943,24 @@ public class AppFrame extends JFrame {
         } catch (IllegalArgumentException ex) {
             JOptionPane.showMessageDialog(this, ex.getMessage(), "Błąd", JOptionPane.ERROR_MESSAGE);
         }
-    }//GEN-LAST:event_addProductManuallyActionPerformed
-//GEN-LAST:event_addProductManuallyActionPerformed
-    private void gotoPaymentButtonActionPerformed(ActionEvent evt) {//GEN-FIRST:event_gotoPaymentButtonActionPerformed
+    }//GEN-FIRST:event_addProductManuallyActionPerformed
+    private void gotoPaymentButtonActionPerformed(ActionEvent evt) {
         //GEN-FIRST:event_gotoPaymentButtonActionPerformed
         layout.show(layoutPanel, "card6");
     }//GEN-LAST:event_gotoPaymentButtonActionPerformed
-//GEN-LAST:event_gotoPaymentButtonActionPerformed
-    private void payByCashButtonActionPerformed(ActionEvent evt) {//GEN-FIRST:event_payByCashButtonActionPerformed
+    private void payByCashButtonActionPerformed(ActionEvent evt) {
         //GEN-FIRST:event_payByCashButtonActionPerformed
         try {
             Transakcja tx = kasaService.finalizujTransakcje(
                     LanguageSetup.get(PickedLanguage, "cash")
             );
             String nip = NumericInputDialog.showNumericDialog(
-                    AppFrame.this,
-                    LanguageSetup.get(PickedLanguage, "nip")
+                    this,
+                    PickedLanguage,
+                    "nip"
             );
+
+
             if (nip != null && !nip.isBlank()) {
                 tx.setNip(nip);
             }
@@ -993,17 +983,19 @@ public class AppFrame extends JFrame {
             );
         }
     }//GEN-LAST:event_payByCashButtonActionPerformed
-//GEN-LAST:event_payByCashButtonActionPerformed
-    private void payByCardButtonActionPerformed(ActionEvent evt) {//GEN-FIRST:event_payByCardButtonActionPerformed
+    private void payByCardButtonActionPerformed(ActionEvent evt) {
         //GEN-FIRST:event_payByCardButtonActionPerformed
         try {
             Transakcja tx = kasaService.finalizujTransakcje(
                     LanguageSetup.get(PickedLanguage, "card")
             );
             String nip = NumericInputDialog.showNumericDialog(
-                    AppFrame.this,
-                    LanguageSetup.get(PickedLanguage, "nip")
+                    this,
+                    PickedLanguage,
+                    "nip"
             );
+
+
             if (nip != null && !nip.isBlank()) {
                 tx.setNip(nip);
             }
@@ -1026,36 +1018,35 @@ public class AppFrame extends JFrame {
             );
         }
     }//GEN-LAST:event_payByCardButtonActionPerformed
-//GEN-LAST:event_payByCardButtonActionPerformed
-    private void backToBasketFromManualEntryButtonActionPerformed(ActionEvent evt) {//GEN-FIRST:event_backToBasketFromManualEntryButtonActionPerformed
+    private void backToBasketFromManualEntryButtonActionPerformed(ActionEvent evt) {
         //GEN-FIRST:event_backToBasketFromManualEntryButtonActionPerformed
         refreshBasketTable();
         layout.show(layoutPanel, "card3");
     }//GEN-LAST:event_backToBasketFromManualEntryButtonActionPerformed
-//GEN-LAST:event_backToBasketFromManualEntryButtonActionPerformed
-    private void selectLanguageButtonActionPerformed(ActionEvent evt) {//GEN-FIRST:event_selectLanguageButtonActionPerformed
+    private void selectLanguageButtonActionPerformed(ActionEvent evt) {
         //GEN-FIRST:event_selectLanguageButtonActionPerformed
         layout.show(layoutPanel, "card5");
     }//GEN-LAST:event_selectLanguageButtonActionPerformed
-//GEN-LAST:event_selectLanguageButtonActionPerformed
-    private void polishLanguageButtonActionPerformed(ActionEvent evt) {//GEN-FIRST:event_polishLanguageButtonActionPerformed
-        //GEN-FIRST:event_polishLanguageButtonActionPerformed
+    private void polishLanguageButtonActionPerformed(ActionEvent evt) {
         PickedLanguage = "pl";
         updateTexts();
+        rebuildKeyboard();
         layout.show(layoutPanel, "card2");
-    }//GEN-LAST:event_polishLanguageButtonActionPerformed
-//GEN-LAST:event_polishLanguageButtonActionPerformed
-    private void englishLanguageButtonActionPerformed(ActionEvent evt) {//GEN-FIRST:event_englishLanguageButtonActionPerformed
-        //GEN-FIRST:event_englishLanguageButtonActionPerformed
+    }
+    private void englishLanguageButtonActionPerformed(ActionEvent evt) {
         PickedLanguage = "en";
         updateTexts();
+        rebuildKeyboard();
         layout.show(layoutPanel, "card2");
-    }//GEN-LAST:event_englishLanguageButtonActionPerformed
-//GEN-LAST:event_englishLanguageButtonActionPerformed
-
-
-
-    private void callHelpFunction() {//GEN-FIRST:event_callHelpFunction
+    }
+    private void rebuildKeyboard() {
+        manualProductEntryPanel.remove(kb);
+        kb = new VirtualKeyboardPanel(productCodeTextField, true, PickedLanguage);
+        manualProductEntryPanel.add(kb, BorderLayout.SOUTH);
+        manualProductEntryPanel.revalidate();
+        manualProductEntryPanel.repaint();
+    }
+    private void callHelpFunction() {
         //GEN-FIRST:event_callHelpFunction
         JOptionPane.showMessageDialog(
                 paymentPanel,
@@ -1064,8 +1055,7 @@ public class AppFrame extends JFrame {
                 JOptionPane.INFORMATION_MESSAGE
         );
     }//GEN-LAST:event_callHelpFunction
-    //GEN-LAST:event_callHelpFunction
-    private void refreshBasketTable() {//GEN-FIRST:event_refreshBasketTable
+    private void refreshBasketTable() {
         DefaultTableModel model = (DefaultTableModel) jTable1.getModel();
         model.setRowCount(0);
         BigDecimal suma = BigDecimal.ZERO;
@@ -1080,23 +1070,21 @@ public class AppFrame extends JFrame {
         for (var e : ilosci.entrySet()) {
             Produkt p = produktyMap.get(e.getKey());
             int qty = e.getValue();
-            BigDecimal cena  = kasaService.getPriceWithDiscount(p);
-            BigDecimal razem = cena.multiply(BigDecimal.valueOf(qty));
-            suma = suma.add(razem);
+            BigDecimal unitPrice = kasaService.getPriceWithDiscount(p);
+            BigDecimal totalPrice = unitPrice.multiply(BigDecimal.valueOf(qty));
+            suma = suma.add(totalPrice);
 
-            // nowa logika:
-            String qtyStr   = qty + "x";
-            String priceStr = razem.setScale(2, RoundingMode.HALF_UP).toPlainString() + " PLN";
-            model.addRow(new Object[]{ p.getNazwa(), qtyStr, priceStr });
+            String qtyStr   = qty + "×";
+            String unitStr  = unitPrice.setScale(2, RoundingMode.HALF_UP).toPlainString() + " PLN";
+            String totalStr = totalPrice.setScale(2, RoundingMode.HALF_UP).toPlainString() + " PLN";
+
+            model.addRow(new Object[]{ p.getNazwa(), qtyStr, unitStr, totalStr });
         }
 
         jLabel2.setText(suma.setScale(2, RoundingMode.HALF_UP).toPlainString() + " PLN");
-    }
-//GEN-LAST:event_refreshBasketTable
-//GEN-LAST:event_refreshBasketTable
-
-
-    private void updateTexts() {//GEN-FIRST:event_refreshBasketTable
+    }//GEN-LAST:event_refreshBasketTable
+    private void updateTexts() {
+        //GEN-FIRST:event_updateTexts
         callHelpButton.setText(LanguageSetup.get(PickedLanguage, "menu.help"));
         callHelpButton2.setText(LanguageSetup.get(PickedLanguage, "menu.help"));
         selectLanguageButton.setText(LanguageSetup.get(PickedLanguage, "menu.language"));
@@ -1117,9 +1105,10 @@ public class AppFrame extends JFrame {
         model.setColumnIdentifiers(new String[]{
                 LanguageSetup.get(PickedLanguage, "column.productName"),
                 LanguageSetup.get(PickedLanguage, "column.quantity"),
+                LanguageSetup.get(PickedLanguage, "column.unitPrice"),
                 LanguageSetup.get(PickedLanguage, "column.price")
         });
-    }//GEN-LAST:event_refreshBasketTable
+    }//GEN-LAST:event_updateTexts
 
     // Variables declaration - do not modify
     private javax.swing.JButton addProductManually;

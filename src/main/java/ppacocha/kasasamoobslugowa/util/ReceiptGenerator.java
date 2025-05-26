@@ -3,13 +3,10 @@ package ppacocha.kasasamoobslugowa.util;
 import ppacocha.kasasamoobslugowa.model.Produkt;
 import ppacocha.kasasamoobslugowa.model.Transakcja;
 import ppacocha.kasasamoobslugowa.service.KasaService;
-import ppacocha.kasasamoobslugowa.ui.VirtualKeyboard;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.FocusAdapter;
-import java.awt.event.FocusEvent;
 import java.awt.image.BufferedImage;
 import java.awt.print.Printable;
 import java.awt.print.PrinterJob;
