@@ -18,7 +18,7 @@ public class LanguageSetup {
         pl.put("start.scan.console",         "Zaczynam kasowanie");
         pl.put("menu.help",                  "Pomoc");
         pl.put("menu.language",              "Język");
-        pl.put("cart.manual",                "Wpisz kod produktu");
+        pl.put("cart.manual",                "Dodaj produkt");
         pl.put("cart.checkout",              "Zapłać");
         pl.put("cart.back",                  "Powrót");
         pl.put("input.code",                 "Wprowadź kod produktu");
@@ -60,6 +60,13 @@ public class LanguageSetup {
         pl.put("error",                       "Błąd");
         pl.put("button.ok",     "OK");
         pl.put("button.cancel", "Anuluj");
+        pl.put("age.verifyTitle", "Weryfikacja wieku");
+        pl.put("age.verifyMessage", "Produkt %s wymaga potwierdzenia wieku (+18)");
+        pl.put("age.verifyPrompt", "Proszę poczekać na personel");
+        pl.put("cart.modify",        "Modyfikuj koszyk");
+        pl.put("cart.modifyTitle",   "Modyfikacja koszyka");
+        pl.put("cart.modifyPrompt",  "Proszę poczekać na personel i zeskanować kartę personelu");
+
 
     }
     //Język Angielski
@@ -71,7 +78,7 @@ public class LanguageSetup {
         en.put("start.scan.console",         "Starting checkout");
         en.put("menu.help",                  "Help");
         en.put("menu.language",              "Language");
-        en.put("cart.manual",                "Enter product code");
+        en.put("cart.manual",                "Add product");
         en.put("cart.checkout",              "Pay");
         en.put("cart.back",                  "Back");
         en.put("input.code",                 "Enter product code");
@@ -113,6 +120,13 @@ public class LanguageSetup {
         en.put("error",                       "Error");
         en.put("button.ok",     "OK");
         en.put("button.cancel", "Cancel");
+        en.put("age.verifyTitle", "Age verify");
+        en.put("age.verifyMessage", "Product %s need age verify (+18)");
+        en.put("age.verifyPrompt", "Please wait for personel");
+        en.put("cart.modify",        "Modify cart");
+        en.put("cart.modifyTitle",   "Cart modification");
+        en.put("cart.modifyPrompt",  "Please wait for staff and scan staff card");
+
 
 
 

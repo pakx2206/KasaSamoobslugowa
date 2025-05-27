@@ -22,9 +22,8 @@ import java.awt.*;
 import java.awt.event.*;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.HashMap;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
 
 public class AppFrame extends JFrame {
     private final KasaService kasaService;
@@ -37,6 +36,11 @@ public class AppFrame extends JFrame {
     private boolean staffClosingAllowed = false;
     private Produkt productAwaitingVerification = null;
     private static final String STAFF_NFC_TAG = "NFC01";
+    private boolean awaitingModifyAuth = false;
+    private JPanel tablePanel;
+    private JPanel sumPanel;
+    private JDialog modifyAuthDialog;
+    private List<String> basketOrderCodes = new ArrayList<>();
     private final ProduktDAO produktDao;
     private JDialog ageDialog;
     private final JButton printReportButton = new JButton("Drukuj raport");
@@ -83,7 +87,6 @@ public class AppFrame extends JFrame {
         setLocationRelativeTo(null);
         setSize(1920, 1080);
         reInitCardLayout();
-        reInitCardLayout();
         getContentPane().repaint();
 
         manualProductEntryPanel.removeAll();
@@ -99,10 +102,30 @@ public class AppFrame extends JFrame {
         manualProductEntryPanel.add(kb, BorderLayout.SOUTH);
         manualProductEntryPanel.add(topBar, BorderLayout.NORTH);
         manualProductEntryPanel.add(scroll,  BorderLayout.CENTER);
-        manualProductEntryPanel.add(kb,      BorderLayout.SOUTH);
         manualProductEntryPanel.revalidate();
         manualProductEntryPanel.repaint();
         layout.show(layoutPanel, "cardSearch");
+        Dimension btnSize = new Dimension(500, 300);
+        Font      btnFont = new Font("Segoe UI", Font.BOLD, 36);
+
+        for (JButton b : new JButton[]{ payByCashButton, payByCardButton }) {
+            b.setPreferredSize(btnSize);
+            b.setMaximumSize(btnSize);
+            b.setMinimumSize(btnSize);
+            b.setFont(btnFont);
+        }
+
+        paymentPanel.removeAll();
+        paymentPanel.setLayout(new BoxLayout(paymentPanel, BoxLayout.X_AXIS));
+        paymentPanel.add(Box.createHorizontalGlue());
+        paymentPanel.add(payByCashButton);
+        paymentPanel.add(Box.createHorizontalStrut(50));
+        paymentPanel.add(payByCardButton);
+        paymentPanel.add(Box.createHorizontalGlue());
+        paymentPanel.revalidate();
+        paymentPanel.repaint();
+
+
 
         updateTexts();
         layout.show(layoutPanel, "card2");
@@ -252,47 +275,72 @@ public class AppFrame extends JFrame {
         layoutPanel.add(paymentPanel, "card6");
     }
     private void handleScan(String code) {
+        if (awaitingModifyAuth && STAFF_NFC_TAG.equals(code)) {
+            awaitingModifyAuth = false;
+            if (modifyAuthDialog != null && modifyAuthDialog.isShowing()) modifyAuthDialog.dispose();
+            showModifyCartDialog();
+            return;
+        }
         if (productAwaitingVerification != null && STAFF_NFC_TAG.equals(code)) {
             if (ageDialog != null && ageDialog.isShowing()) {
                 ageDialog.dispose();
             }
+
             kasaService.verifyAge();
             kasaService.dodajPoKodzieLubTagu(productAwaitingVerification.getKodKreskowy());
             refreshBasketTable();
             productAwaitingVerification = null;
+            layout.show(layoutPanel, "card3");
+            layoutPanel.requestFocusInWindow();
             return;
         }
-
         Produkt p = produktDao.findById(code);
         if (p == null) p = produktDao.findByNfcTag(code);
         if (p == null) {
-            JOptionPane.showMessageDialog(this,
-                    "Nie znaleziono produktu: " + code,
-                    "Błąd", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(
+                    this,
+                    LanguageSetup.get(PickedLanguage, "error.notFound") + ": " + code,
+                    LanguageSetup.get(PickedLanguage, "error"),
+                    JOptionPane.ERROR_MESSAGE
+            );
             return;
         }
-
         if (p.isRequiresAgeVerification() && !kasaService.isAgeVerified()) {
             productAwaitingVerification = p;
-
-            ageDialog = new JDialog(this, "Weryfikacja wieku", Dialog.ModalityType.APPLICATION_MODAL);
+            ageDialog = new JDialog(this, LanguageSetup.get(PickedLanguage, "age.verifyTitle"), Dialog.ModalityType.APPLICATION_MODAL);
+            ageDialog.setUndecorated(true);
             ageDialog.setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
-            ageDialog.setLayout(new BorderLayout(10,10));
-            ageDialog.add(new JLabel(
-                    "<html>Produkt „"+p.getNazwa()+"\" wymaga potwierdzenia wieku (18+).<br>" +
-                            "Proszę poczekać na personel i zeskanować ich kartę.</html>"
-            ), BorderLayout.CENTER);
-            ageDialog.pack();
+            ageDialog.getRootPane().setWindowDecorationStyle(JRootPane.NONE);
+            JPanel content = new JPanel(new BorderLayout(20,20));
+            content.setBorder(BorderFactory.createEmptyBorder(30,30,30,30));
+            content.setBackground(Color.WHITE);
+            JLabel title = new JLabel(LanguageSetup.get(PickedLanguage, "age.verifyTitle"), SwingConstants.CENTER);
+            title.setFont(new Font("Segoe UI", Font.BOLD, 28));
+            content.add(title, BorderLayout.NORTH);
+            String msgTemplate = LanguageSetup.get(PickedLanguage, "age.verifyMessage");
+            JLabel message = new JLabel(
+                    String.format("<html><div style='text-align:center;font-size:20px;'>%s</div></html>",
+                            String.format(msgTemplate, p.getNazwa())
+                    ),
+                    SwingConstants.CENTER
+            );
+            content.add(message, BorderLayout.CENTER);
+            JLabel prompt = new JLabel(LanguageSetup.get(PickedLanguage, "age.verifyPrompt"), SwingConstants.CENTER);
+            prompt.setFont(new Font("Segoe UI", Font.PLAIN, 18));
+            content.add(prompt, BorderLayout.SOUTH);
+            ageDialog.setContentPane(content);
+            ageDialog.setSize(600, 300);
             ageDialog.setResizable(false);
             ageDialog.setLocationRelativeTo(this);
             ageDialog.setVisible(true);
-
             return;
         }
-
         kasaService.dodajPoKodzieLubTagu(code);
         refreshBasketTable();
+        layout.show(layoutPanel, "card3");
+        layoutPanel.requestFocusInWindow();
     }
+
 
 
 
@@ -450,7 +498,7 @@ public class AppFrame extends JFrame {
             }
         });
 
-        gotoManualEntryButton.setText("Wpisz kod produktu");
+        gotoManualEntryButton.setText("Wprowadź produkt ręcznie");
         gotoManualEntryButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 gotoManualEntryButtonActionPerformed(evt);
@@ -620,14 +668,14 @@ public class AppFrame extends JFrame {
 
         layoutPanel.add(manualProductEntryPanel, "card4");
 
-        payByCashButton.setText("Zaplac gotowka");
+        payByCashButton.setText("Zapłać gotówką");
         payByCashButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 payByCashButtonActionPerformed(evt);
             }
         });
 
-        payByCardButton.setText("Zaplac karta");
+        payByCardButton.setText("Zapłać kartą");
         payByCardButton.addActionListener(new java.awt.event.ActionListener() {
             public void actionPerformed(java.awt.event.ActionEvent evt) {
                 payByCardButtonActionPerformed(evt);
@@ -757,19 +805,28 @@ public class AppFrame extends JFrame {
         cm.getColumn(2).setCellRenderer(priceRenderer);
         cm.getColumn(3).setCellRenderer(priceRenderer);
 
-        JPanel tablePanel = new JPanel(new BorderLayout());
+        tablePanel = new JPanel(new BorderLayout());
         Border inset   = BorderFactory.createEmptyBorder(0, 20, 10, 10);
         Border outline = BorderFactory.createLineBorder(borderColor, 12, true);
         tablePanel.setBorder(BorderFactory.createCompoundBorder(inset, outline));
         tablePanel.add(jScrollPane1, BorderLayout.CENTER);
 
         jLabel2.setFont(bigFont);
-        JPanel sumPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        sumPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         sumPanel.setOpaque(false);
         sumPanel.setPreferredSize(new Dimension(0, jTable1.getRowHeight()));
         sumPanel.setBorder(BorderFactory.createMatteBorder(4, 0, 0, 0, borderColor));
         sumPanel.add(jLabel2);
-        tablePanel.add(sumPanel, BorderLayout.SOUTH);
+
+        JButton modifyCartButton = new JButton(LanguageSetup.get(PickedLanguage, "cart.modify"));
+        modifyCartButton.setPreferredSize(new Dimension(200, 80));
+        modifyCartButton.setFont(new Font("Segoe UI", Font.BOLD, 24));
+        modifyCartButton.addActionListener(ev -> showModifyCartDialog());
+
+        JPanel bottom = new JPanel(new BorderLayout());
+        bottom.add(modifyCartButton, BorderLayout.WEST);
+        bottom.add(sumPanel,         BorderLayout.EAST);
+        tablePanel.add(bottom,       BorderLayout.SOUTH);
 
         tablePanel.addComponentListener(new ComponentAdapter() {
             @Override
@@ -793,18 +850,13 @@ public class AppFrame extends JFrame {
         JPanel controls = new JPanel();
         controls.setOpaque(false);
         controls.setLayout(new BoxLayout(controls, BoxLayout.Y_AXIS));
-
         controls.add(Box.createVerticalStrut(50));
-
         controls.add(gotoManualEntryButton);
         controls.add(Box.createVerticalStrut(40));
-
         controls.add(loyaltyCardButton);
         controls.add(Box.createVerticalStrut(40));
-
         controls.add(gotoPaymentButton);
         controls.add(Box.createVerticalGlue());
-
         controls.add(Box.createVerticalStrut(40));
         controls.add(callHelpButton2);
         controls.add(Box.createVerticalStrut(50));
@@ -824,7 +876,6 @@ public class AppFrame extends JFrame {
         basketPanel.removeAll();
         basketPanel.setLayout(new BorderLayout());
         basketPanel.add(centerWrapper, BorderLayout.CENTER);
-
         basketPanel.revalidate();
         basketPanel.repaint();
     }
@@ -874,14 +925,6 @@ public class AppFrame extends JFrame {
                         SwingUtilities.invokeLater(() -> {
                             try {
                                 handleScan(tag);
-                                if (!STAFF_NFC_TAG.equals(tag) && productAwaitingVerification == null) {
-                                    JOptionPane.showMessageDialog(
-                                            this,
-                                            LanguageSetup.get(PickedLanguage, "NFCScan.confirmation") + tag,
-                                            "NFC",
-                                            JOptionPane.INFORMATION_MESSAGE
-                                    );
-                                }
                             } catch (Exception ex) {
                                 JOptionPane.showMessageDialog(
                                         this,
@@ -1059,9 +1102,10 @@ public class AppFrame extends JFrame {
         DefaultTableModel model = (DefaultTableModel) jTable1.getModel();
         model.setRowCount(0);
         BigDecimal suma = BigDecimal.ZERO;
+        basketOrderCodes.clear();
 
-        Map<String,Integer> ilosci = new HashMap<>();
-        Map<String,Produkt> produktyMap = new HashMap<>();
+        Map<String,Integer> ilosci = new LinkedHashMap<>();
+        Map<String,Produkt> produktyMap = new LinkedHashMap<>();
         for (Produkt p : kasaService.getKoszyk()) {
             ilosci.merge(p.getKodKreskowy(), 1, Integer::sum);
             produktyMap.putIfAbsent(p.getKodKreskowy(), p);
@@ -1079,10 +1123,101 @@ public class AppFrame extends JFrame {
             String totalStr = totalPrice.setScale(2, RoundingMode.HALF_UP).toPlainString() + " PLN";
 
             model.addRow(new Object[]{ p.getNazwa(), qtyStr, unitStr, totalStr });
+            basketOrderCodes.add(p.getKodKreskowy());
         }
 
         jLabel2.setText(suma.setScale(2, RoundingMode.HALF_UP).toPlainString() + " PLN");
-    }//GEN-LAST:event_refreshBasketTable
+        tablePanel.revalidate();
+        tablePanel.repaint();
+    }
+
+
+    private void showModifyCartDialog() {
+        JDialog dlg = new JDialog(this,
+                LanguageSetup.get(PickedLanguage, "cart.modifyTitle"),
+                Dialog.ModalityType.APPLICATION_MODAL);
+        dlg.setUndecorated(true);
+        dlg.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+
+        Map<String,Integer> localCounts = new LinkedHashMap<>();
+        for (Produkt p : kasaService.getKoszyk()) {
+            localCounts.merge(p.getKodKreskowy(), 1, Integer::sum);
+        }
+
+        JPanel list = new JPanel();
+        list.setLayout(new BoxLayout(list, BoxLayout.Y_AXIS));
+        Map<String, JLabel> labelMap = new HashMap<>();
+
+        for (var entry : localCounts.entrySet()) {
+            String code = entry.getKey();
+            Produkt p = produktDao.findById(code);
+            int qty = entry.getValue();
+
+            JPanel row = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 10));
+            JLabel name = new JLabel(p.getNazwa() + "  [");
+            JLabel qtyLabel = new JLabel(String.valueOf(qty));
+            JLabel closingBracket = new JLabel("]");
+            name.setFont(new Font("Segoe UI", Font.PLAIN, 20));
+            qtyLabel .setFont(new Font("Segoe UI", Font.BOLD, 20));
+            labelMap.put(code, qtyLabel);
+
+            JButton minus = new JButton("–");
+            JButton plus  = new JButton("+");
+            Dimension bsz = new Dimension(50,50);
+            minus.setPreferredSize(bsz);
+            plus .setPreferredSize(bsz);
+
+            minus.addActionListener(ev -> {
+                int current = localCounts.get(code);
+                if (current > 0) {
+                    localCounts.put(code, current - 1);
+                    qtyLabel.setText(String.valueOf(current - 1));
+                }
+            });
+            plus.addActionListener(ev -> {
+                int current = localCounts.getOrDefault(code, 0);
+                localCounts.put(code, current + 1);
+                qtyLabel.setText(String.valueOf(current + 1));
+            });
+
+            row.add(name);
+            row.add(qtyLabel);
+            row.add(closingBracket);
+            row.add(minus);
+            row.add(plus);
+            list.add(row);
+        }
+
+        JScrollPane sp = new JScrollPane(list);
+        sp.setBorder(null);
+        dlg.getContentPane().add(sp, BorderLayout.CENTER);
+
+        JButton close = new JButton("Zamknij");
+        close.setPreferredSize(new Dimension(120, 40));
+        close.addActionListener(e -> {
+
+            kasaService.getKoszyk().clear();
+            for (var ent : localCounts.entrySet()) {
+                String code = ent.getKey();
+                int cnt = ent.getValue();
+                for (int i = 0; i < cnt; i++) {
+                    kasaService.dodajPoKodzieLubTagu(code);
+                }
+            }
+            refreshBasketTable();
+            dlg.dispose();
+        });
+        JPanel footer = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        footer.add(close);
+        dlg.getContentPane().add(footer, BorderLayout.SOUTH);
+
+        dlg.pack();
+        dlg.setLocationRelativeTo(this);
+        dlg.setVisible(true);
+    }
+
+
+
     private void updateTexts() {
         //GEN-FIRST:event_updateTexts
         callHelpButton.setText(LanguageSetup.get(PickedLanguage, "menu.help"));
