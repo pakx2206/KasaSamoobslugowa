@@ -136,6 +136,10 @@ public class KasaService {
         ageVerified       = false;
         ageVerifiedAt     = null;
     }
+    public void clearBasket() {
+        koszykDao.clear();
+    }
+
 
     public BigDecimal getPriceWithDiscount(Produkt product) {
         BigDecimal price = product.getCena();

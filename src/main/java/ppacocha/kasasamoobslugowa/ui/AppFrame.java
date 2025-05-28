@@ -26,6 +26,7 @@ import java.util.*;
 import java.util.List;
 
 public class AppFrame extends JFrame {
+    private javax.swing.Timer inactivityTimer;
     private final KasaService kasaService;
     private final RaportService raportService;
     private Thread nfcThread;
@@ -80,6 +81,7 @@ public class AppFrame extends JFrame {
                 }
             }
         });
+
         layout = new CardLayout();
         AppTheme.setupDefaults();
         initComponents();
@@ -341,6 +343,55 @@ public class AppFrame extends JFrame {
         layoutPanel.requestFocusInWindow();
     }
 
+    private void initInactivityTimer() {
+        inactivityTimer = new javax.swing.Timer(60_000, e -> showInactivityWarning());
+        inactivityTimer.setRepeats(false);
+    }
+    private void resetInactivityTimer() {
+        if (inactivityTimer == null) initInactivityTimer();
+        inactivityTimer.restart();
+    }
+    private void showInactivityWarning() {
+        final JDialog dlg = new JDialog(this, "Brak aktywności", true);
+        dlg.setLayout(new BorderLayout(10,10));
+        dlg.add(new JLabel("Czy kontynuować zakupy?", SwingConstants.CENTER), BorderLayout.CENTER);
+
+        JPanel btns = new JPanel();
+        JButton yes = new JButton("Tak");
+        JButton no  = new JButton("Nie");
+        btns.add(yes);
+        btns.add(no);
+        dlg.add(btns, BorderLayout.SOUTH);
+
+        javax.swing.Timer dialogTimer = new javax.swing.Timer(60_000, ev -> {
+            dlg.dispose();
+            returnToStart();
+        });
+        dialogTimer.setRepeats(false);
+
+        yes.addActionListener(ev -> {
+            dialogTimer.stop();
+            dlg.dispose();
+            resetInactivityTimer();
+        });
+        no.addActionListener(ev -> {
+            dialogTimer.stop();
+            dlg.dispose();
+            returnToStart();
+        });
+
+        dlg.pack();
+        dlg.setLocationRelativeTo(this);
+        dialogTimer.start();
+        dlg.setVisible(true);
+    }
+    private void returnToStart() {
+        kasaService.resetSession();
+        loyaltyApplied = false;
+        loyaltyCardButton.setEnabled(true);
+        refreshBasketTable();
+        layout.show(layoutPanel, "card2");
+    }
 
 
 
@@ -806,7 +857,7 @@ public class AppFrame extends JFrame {
         cm.getColumn(3).setCellRenderer(priceRenderer);
 
         tablePanel = new JPanel(new BorderLayout());
-        Border inset   = BorderFactory.createEmptyBorder(0, 20, 10, 10);
+        Border inset   = BorderFactory.createEmptyBorder(0, 20, 10, 20);
         Border outline = BorderFactory.createLineBorder(borderColor, 12, true);
         tablePanel.setBorder(BorderFactory.createCompoundBorder(inset, outline));
         tablePanel.add(jScrollPane1, BorderLayout.CENTER);
@@ -814,16 +865,16 @@ public class AppFrame extends JFrame {
         jLabel2.setFont(bigFont);
         sumPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         sumPanel.setOpaque(false);
-        sumPanel.setPreferredSize(new Dimension(0, jTable1.getRowHeight()));
-        sumPanel.setBorder(BorderFactory.createMatteBorder(4, 0, 0, 0, borderColor));
+        sumPanel.setPreferredSize(new Dimension(200, jTable1.getRowHeight()));
         sumPanel.add(jLabel2);
 
         JButton modifyCartButton = new JButton(LanguageSetup.get(PickedLanguage, "cart.modify"));
-        modifyCartButton.setPreferredSize(new Dimension(200, 80));
+        modifyCartButton.setPreferredSize(new Dimension(300, 80));
         modifyCartButton.setFont(new Font("Segoe UI", Font.BOLD, 24));
         modifyCartButton.addActionListener(ev -> showModifyCartDialog());
 
         JPanel bottom = new JPanel(new BorderLayout());
+        bottom.setBorder(BorderFactory.createMatteBorder(4, 0, 0, 0, borderColor));
         bottom.add(modifyCartButton, BorderLayout.WEST);
         bottom.add(sumPanel,         BorderLayout.EAST);
         tablePanel.add(bottom,       BorderLayout.SOUTH);
@@ -912,7 +963,11 @@ public class AppFrame extends JFrame {
     }//GEN-LAST:event_productCodeTextFieldActionPerformed
     private void startCheckoutActionPerformed(ActionEvent evt) {
         //GEN-FIRST:event_startCheckoutActionPerformed
+        kasaService.resetSession();
+        loyaltyApplied = false;
+        loyaltyCardButton.setEnabled(true);
         refreshBasketTable();
+        resetInactivityTimer();
         layout.show(layoutPanel, "card3");
         if (reader != null && (nfcThread == null || !nfcThread.isAlive())) {
             nfcThread = new Thread(() -> {
@@ -1129,6 +1184,7 @@ public class AppFrame extends JFrame {
         jLabel2.setText(suma.setScale(2, RoundingMode.HALF_UP).toPlainString() + " PLN");
         tablePanel.revalidate();
         tablePanel.repaint();
+        resetInactivityTimer();
     }
 
 
@@ -1196,13 +1252,8 @@ public class AppFrame extends JFrame {
         close.setPreferredSize(new Dimension(120, 40));
         close.addActionListener(e -> {
 
-            kasaService.getKoszyk().clear();
             for (var ent : localCounts.entrySet()) {
-                String code = ent.getKey();
-                int cnt = ent.getValue();
-                for (int i = 0; i < cnt; i++) {
-                    kasaService.dodajPoKodzieLubTagu(code);
-                }
+                kasaService.zmienIloscPoKodzie(ent.getKey(), ent.getValue());
             }
             refreshBasketTable();
             dlg.dispose();

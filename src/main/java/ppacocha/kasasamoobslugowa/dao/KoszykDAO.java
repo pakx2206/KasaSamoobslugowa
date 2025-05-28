@@ -10,4 +10,5 @@ public interface KoszykDAO {
     List<Produkt> findAll();
     void clear();
     public void addProduct(Produkt p);
+
 }
