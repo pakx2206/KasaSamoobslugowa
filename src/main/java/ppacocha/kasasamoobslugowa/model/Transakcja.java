@@ -20,27 +20,45 @@ public class Transakcja {
         this.suma = calculateSum();
         this.typeOfPayment = typeOfPayment;
     }
-
     private BigDecimal calculateSum() {
-        return product.stream()
-                .map(Produkt::getPrice)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        return product.stream().map(Produkt::getPrice).reduce(BigDecimal.ZERO, BigDecimal::add);
     }
-
-    public String getId() { return id; }
-    public void setId(String id) { this.id = id; }
-
-    public List<Produkt> getProduct() { return product; }
-    public LocalDateTime getData() { return data; }
-    public void setData(LocalDateTime data) { this.data = data; }
-    public BigDecimal getSuma() { return suma; }
-    public void setSuma(BigDecimal suma) { this.suma = suma; }
-    public String getTypeOfPayment() { return typeOfPayment; }
-    public LocalDateTime getAgeVerifiedAt() { return ageVerifiedAt; }
-    public void setAgeVerifiedAt(LocalDateTime ageVerifiedAt) { this.ageVerifiedAt = ageVerifiedAt; }
-
-    public String getNip() { return nip; }
-    public void setNip(String nip) { this.nip = nip; }
+    public String getId() {
+        return id;
+    }
+    public void setId(String id) {
+        this.id = id;
+    }
+    public List<Produkt> getProduct() {
+        return product;
+    }
+    public LocalDateTime getData() {
+        return data;
+    }
+    public void setData(LocalDateTime data) {
+        this.data = data;
+    }
+    public BigDecimal getSuma() {
+        return suma;
+    }
+    public void setSuma(BigDecimal suma) {
+        this.suma = suma;
+    }
+    public String getTypeOfPayment() {
+        return typeOfPayment;
+    }
+    public LocalDateTime getAgeVerifiedAt() {
+        return ageVerifiedAt;
+    }
+    public void setAgeVerifiedAt(LocalDateTime ageVerifiedAt) {
+        this.ageVerifiedAt = ageVerifiedAt;
+    }
+    public String getNip() {
+        return nip;
+    }
+    public void setNip(String nip) {
+        this.nip = nip;
+    }
 
     @Override
     public String toString() {

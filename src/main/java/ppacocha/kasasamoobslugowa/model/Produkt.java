@@ -13,14 +13,13 @@ public class Produkt {
   private boolean requiresAgeVerification;
 
 
-  public Produkt(String name, BigDecimal price, String barCode,
-                 String nfcTag, int quantity, BigDecimal vatRate, boolean requiresAgeVerification) {
+  public Produkt(String name, BigDecimal price, String barCode, String nfcTag, int quantity, BigDecimal vatRate, boolean requiresAgeVerification) {
         this.name = name;
         this.price = price;
         this.barCode = barCode;
-        this.nfcTag      = nfcTag;
+        this.nfcTag = nfcTag;
         this.quantity = quantity;
-        this.vatRate     = vatRate;
+        this.vatRate = vatRate;
         this.requiresAgeVerification = requiresAgeVerification;
   }
   public Produkt(String name, BigDecimal price, String barCode, String nfcTag, boolean requiresAgeVerification) {
@@ -68,8 +67,10 @@ public class Produkt {
 
   @Override
   public boolean equals(Object o) {
-    if (this == o) return true;
-    if (!(o instanceof Produkt)) return false;
+    if (this == o)
+      return true;
+    if (!(o instanceof Produkt))
+      return false;
     Produkt produkt = (Produkt) o;
     return Objects.equals(barCode, produkt.barCode);
   }

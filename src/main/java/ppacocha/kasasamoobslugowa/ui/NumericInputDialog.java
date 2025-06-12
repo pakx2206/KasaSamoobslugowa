@@ -15,17 +15,16 @@ public class NumericInputDialog extends JDialog {
     private final String language;
     private final String promptKey;
     private final boolean loyaltyMode;
-
     private JList<Country> prefixList;
     private final JTextField tf;
     private String value;
 
     private NumericInputDialog(Frame owner, String language, String promptKey, boolean loyaltyMode) {
         super(owner, true);
-        this.language   = language;
-        this.promptKey  = promptKey;
-        this.loyaltyMode= loyaltyMode;
-        this.tf         = new JTextField();
+        this.language = language;
+        this.promptKey = promptKey;
+        this.loyaltyMode = loyaltyMode;
+        this.tf = new JTextField();
 
         if (loyaltyMode) {
             List<Country> countries = new ArrayList<>();
@@ -48,10 +47,8 @@ public class NumericInputDialog extends JDialog {
                 }
             }
         }
-
         initUI(owner);
         pack();
-
         Dimension p = owner.getSize();
         setSize((int)(p.width * .45), (int)(p.height * .60));
         setLocationRelativeTo(owner);
@@ -149,9 +146,11 @@ public class NumericInputDialog extends JDialog {
     private void onKey(String k) {
         String t = tf.getText();
         switch(k) {
-            case "\u2190" -> { if (!t.isEmpty()) tf.setText(t.substring(0,t.length()-1)); }
-            case "CLR"     -> tf.setText("");
-            default        -> tf.setText(t + k);
+            case "\u2190" -> {
+                if (!t.isEmpty()) tf.setText(t.substring(0,t.length()-1));
+            }
+            case "CLR" -> tf.setText("");
+            default -> tf.setText(t + k);
         }
         tf.requestFocusInWindow();
     }
@@ -170,10 +169,7 @@ public class NumericInputDialog extends JDialog {
         return dlg.value;
     }
 
-    public static String showNumericDialog(Frame owner,
-                                           String language,
-                                           String promptKey,
-                                           boolean loyalty) {
+    public static String showNumericDialog(Frame owner, String language, String promptKey, boolean loyalty) {
         var dlg = new NumericInputDialog(owner, language, promptKey, loyalty);
         dlg.setVisible(true);
         return dlg.value;
@@ -205,11 +201,7 @@ public class NumericInputDialog extends JDialog {
             setBorder(new EmptyBorder(4,4,4,4));
         }
         @Override
-        public Component getListCellRendererComponent(JList<? extends Country> l,
-                                                      Country v,
-                                                      int idx,
-                                                      boolean sel,
-                                                      boolean foc) {
+        public Component getListCellRendererComponent(JList<? extends Country> l, Country v, int idx, boolean sel, boolean foc) {
             setText(v.code);
             setIcon(v.flag);
             setBackground(sel ? new Color(0xCCEEDD) : Color.WHITE);

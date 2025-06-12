@@ -23,25 +23,20 @@ public class ProductSearchPanel extends JPanel {
     private final java.util.function.Consumer<String> onProductSelected;
 
     private final JTextField searchField = new JTextField();
-    private final JButton backButton   = new JButton();
-    private final JPanel itemGrid      = new JPanel();
+    private final JButton backButton = new JButton();
+    private final JPanel itemGrid = new JPanel();
 
-    public ProductSearchPanel(String langKey,
-                              KasaService kasaService,
-                              Runnable onBack,
-                              java.util.function.Consumer<String> onProductSelected) {
-        this.langKey           = langKey;
-        this.kasaService       = kasaService;
-        this.onBack            = onBack;
+    public ProductSearchPanel(String langKey, KasaService kasaService, Runnable onBack, java.util.function.Consumer<String> onProductSelected) {
+        this.langKey = langKey;
+        this.kasaService = kasaService;
+        this.onBack = onBack;
         this.onProductSelected = onProductSelected;
 
         setLayout(new BorderLayout(10,10));
         setBackground(AppTheme.SECONDARY_BACKGROUND);
 
         itemGrid.setLayout(new GridLayout(0, 4, 10, 10));
-        JScrollPane scroll = new JScrollPane(itemGrid,
-                JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
-                JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        JScrollPane scroll = new JScrollPane(itemGrid, JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED, JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         scroll.getViewport().setBackground(AppTheme.BACKGROUND);
         scroll.getVerticalScrollBar().setUnitIncrement(50);
         add(scroll, BorderLayout.CENTER);
@@ -77,17 +72,20 @@ public class ProductSearchPanel extends JPanel {
         JPanel south = new JPanel(new BorderLayout(5,5));
         south.setBackground(getBackground());
         south.add(bottom, BorderLayout.NORTH);
-        south.add(vk,     BorderLayout.CENTER);
+        south.add(vk, BorderLayout.CENTER);
         add(south, BorderLayout.SOUTH);
 
         SwingUtilities.invokeLater(() -> searchField.requestFocusInWindow());
 
         searchField.getDocument().addDocumentListener(new DocumentListener() {
-            public void insertUpdate(DocumentEvent e) { reloadGrid(); }
-            public void removeUpdate(DocumentEvent e) { reloadGrid(); }
-            public void changedUpdate(DocumentEvent e){ reloadGrid(); }
+            public void insertUpdate(DocumentEvent e) {
+                reloadGrid();
+            }
+            public void removeUpdate(DocumentEvent e) {
+                reloadGrid();
+            }
+            public void changedUpdate(DocumentEvent e){}
         });
-
         reloadGrid();
     }
 
@@ -96,19 +94,15 @@ public class ProductSearchPanel extends JPanel {
         String q = Normalizer.normalize(raw, Normalizer.Form.NFD)
                 .replaceAll("\\p{M}", "");
 
-        ProduktDAO produktDao = new MongoProduktDAO();
-        List<Produkt> all = produktDao.findAll();
+        List<Produkt> all = new MongoProduktDAO().findAll();
 
         List<Produkt> filtered = all.stream()
                 .filter(p -> {
                     String name = p.getName().toLowerCase();
-                    String nameNorm = Normalizer.normalize(name, Normalizer.Form.NFD)
-                            .replaceAll("\\p{M}", "");
-                    return q.isEmpty()
-                            || nameNorm.contains(q)
-                            || p.getBarCode().contains(q);
+                    String nameNorm = Normalizer.normalize(name, Normalizer.Form.NFD).replaceAll("\\p{M}", "");
+                    return q.isEmpty() || nameNorm.contains(q) || p.getBarCode().contains(q);
                 })
-                .collect(Collectors.toList());
+                .toList();
 
         itemGrid.removeAll();
         for (Produkt p : filtered) {
@@ -139,9 +133,10 @@ public class ProductSearchPanel extends JPanel {
 
         b.getModel().addChangeListener(e -> {
             ButtonModel m = b.getModel();
-            if (m.isPressed())        b.setBackground(new Color(0xF0F0F0));
-            else if (m.isRollover())  b.setBackground(new Color(0xFEFEFE));
-            else                       b.setBackground(Color.WHITE);
+            if (m.isPressed())
+                b.setBackground(new Color(0xF0F0F0));
+            else
+                b.setBackground(Color.WHITE);
         });
         b.addFocusListener(new FocusAdapter(){
             public void focusGained(FocusEvent e) {

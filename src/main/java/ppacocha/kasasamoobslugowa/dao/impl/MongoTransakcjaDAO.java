@@ -36,18 +36,17 @@ public class MongoTransakcjaDAO implements TransakcjaDAO {
                 .map(e -> new Document()
                         .append("kod_kreskowy", e.getKey())
                         .append("ilosc", e.getValue().intValue())
-                        .append("cena_jednostkowa",
-                                tx.getProduct().stream()
-                                        .filter(p -> p.getBarCode().equals(e.getKey()))
-                                        .findFirst().get()
-                                        .getPrice().doubleValue()
+                        .append("cena_jednostkowa", tx.getProduct().stream()
+                                .filter(p -> p.getBarCode().equals(e.getKey()))
+                                .findFirst().get()
+                                .getPrice().doubleValue()
                         )
                 )
                 .collect(Collectors.toList());
 
         Document doc = new Document()
-                .append("data",     FMT.format(tx.getData()))
-                .append("suma",     tx.getSuma().doubleValue())
+                .append("data", FMT.format(tx.getData()))
+                .append("suma", tx.getSuma().doubleValue())
                 .append("typ_platnosci", tx.getTypeOfPayment())
                 .append("produkty", items);
 
@@ -64,10 +63,10 @@ public class MongoTransakcjaDAO implements TransakcjaDAO {
         List<Produkt> products = new ArrayList<>();
         List<Document> items = (List<Document>) d.get("produkty");
         for (Document it : items) {
-            String name     = it.getString("nazwa");
-            String code     = it.getString("kod_kreskowy");
-            String nfcTag   = it.getString("nfc_tag");
-            int qty         = it.getInteger("ilosc", 1);
+            String name = it.getString("nazwa");
+            String code = it.getString("kod_kreskowy");
+            String nfcTag = it.getString("nfc_tag");
+            int qty = it.getInteger("ilosc", 1);
             Number unitNum = it.get("cena_jednostkowa", Number.class);
             BigDecimal unit = (unitNum != null) ? new BigDecimal(unitNum.toString()) : BigDecimal.ZERO;
             Number vatNum = it.get("vat_rate", Number.class);
@@ -75,14 +74,7 @@ public class MongoTransakcjaDAO implements TransakcjaDAO {
             boolean requiresAge = it.getBoolean("requiresAgeVerification", false);
 
             for (int i = 0; i < qty; i++) {
-                products.add(new Produkt(
-                        name,
-                        unit,
-                        code,
-                        nfcTag,
-                        1,
-                        vat,
-                        requiresAge
+                products.add(new Produkt(name, unit, code, nfcTag, 1, vat, requiresAge
                 ));
             }
         }

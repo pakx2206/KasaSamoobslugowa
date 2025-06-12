@@ -23,7 +23,7 @@ public class MongoProduktDAO implements ProduktDAO {
         coll = db.getCollection("produkt");
     }
 
-    private Produkt docToProdukt(Document d) {
+    private Produkt mapToProduct(Document d) {
         String kod = d.get("kod_kreskowy").toString();
         String nazwa = d.getString("nazwa");
         boolean requires = d.getBoolean("requiresAgeVerification", false);
@@ -57,20 +57,20 @@ public class MongoProduktDAO implements ProduktDAO {
                 d = coll.find(eq("kod_kreskowy", num)).first();
             } catch (NumberFormatException ignored) {}
         }
-        return d == null ? null : docToProdukt(d);
+        return d == null ? null : mapToProduct(d);
     }
 
     @Override
     public Produkt findByNfcTag(String tag) {
         Document d = coll.find(eq("nfc_tag", tag)).first();
-        return d == null ? null : docToProdukt(d);
+        return d == null ? null : mapToProduct(d);
     }
 
     @Override
     public List<Produkt> findAll() {
         List<Produkt> out = new ArrayList<>();
         for (Document d : coll.find()) {
-            out.add(docToProdukt(d));
+            out.add(mapToProduct(d));
         }
         return out;
     }
@@ -113,7 +113,7 @@ public class MongoProduktDAO implements ProduktDAO {
         for (Document d : coll.find()) {
             String kod = d.get("kod_kreskowy").toString();
             if (kod.contains(fragment)) {
-                out.add(docToProdukt(d));
+                out.add(mapToProduct(d));
             }
         }
         return out;
@@ -121,14 +121,14 @@ public class MongoProduktDAO implements ProduktDAO {
 
     @Override
     public void reduceStock(String barCode, int amount) {
-        Object filterVal;
+        Object longValue;
         try {
-            filterVal = Long.parseLong(barCode);
+            longValue = Long.parseLong(barCode);
         } catch (NumberFormatException ex) {
-            filterVal = barCode;
+            longValue = barCode;
         }
         coll.updateOne(
-                new Document("kod_kreskowy", filterVal),
+                new Document("kod_kreskowy", longValue),
                 new Document("$inc", new Document("ilosc", -amount))
         );
     }
@@ -139,7 +139,7 @@ public class MongoProduktDAO implements ProduktDAO {
         Bson regexCode = Filters.regex("kod_kreskowy", string, "i");
         Bson regexName = Filters.regex("nazwa", string, "i");
         for (Document d : coll.find(Filters.or(regexCode, regexName))) {
-            out.add(docToProdukt(d));
+            out.add(mapToProduct(d));
         }
         return out;
     }

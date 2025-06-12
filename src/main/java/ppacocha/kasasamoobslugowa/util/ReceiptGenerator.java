@@ -20,22 +20,17 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 public class ReceiptGenerator {
-    private static final boolean AUTO_PRINT = false;
-    private static final String STORE_NAME    = "Sklep Spożywczy";
+    private static final boolean AUTO_PRINT = true;
+    private static final String STORE_NAME = "Sklep Spożywczy";
     private static final String STORE_ADDRESS = "ul. Handlowa 1, 33-100 Tarnów";
-    private static final String TAXPAYER_NIP  = "123-456-32-18";
-    private static final String POS_ID        = "KASA-01";
-    private static final String CASHIER_ID    = "KASJER-05";
-    private static final String FISCAL_UID    = "PL-FISC-00012345";
-    private static final String CURRENCY      = "PLN";
+    private static final String TAXPAYER_NIP = "123-456-32-18";
+    private static final String POS_ID = "KASA-01";
+    private static final String CASHIER_ID = "KASJER-05";
+    private static final String FISCAL_UID = "PL-FISC-00012345";
+    private static final String CURRENCY = "PLN";
     private static final DateTimeFormatter DT_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
-    public static void generateAndSaveReceipt(
-            JFrame parent,
-            Transakcja tx,
-            String currentLanguage,
-            KasaService kasaService
-    ) {
+    public static void generateAndSaveReceipt(JFrame parent, Transakcja tx, String currentLanguage, KasaService kasaService) {
         String buyerNip = tx.getNip();
         List<String> lines = buildReceiptLines(tx, buyerNip, kasaService);
         BufferedImage img = renderLinesToImage(lines);
@@ -94,10 +89,9 @@ public class ReceiptGenerator {
             int qtyN = e.getValue().intValue();
             Produkt p = prodMap.get(name);
             BigDecimal unit = kasaService.getPriceWithDiscount(p);
-            BigDecimal sum  = unit.multiply(BigDecimal.valueOf(qtyN));
+            BigDecimal sum = unit.multiply(BigDecimal.valueOf(qtyN));
             total = total.add(sum);
-            out.add(String.format("%-20.20s %3dx%6.2f %7.2f",
-                    name, qtyN, unit, sum));
+            out.add(String.format("%-20.20s %3dx%6.2f %7.2f", name, qtyN, unit, sum));
         }
         out.add(repeat('-',40));
         out.add(String.format("SUMA BRUTTO:%20.2f %s", total, CURRENCY));
@@ -132,7 +126,7 @@ public class ReceiptGenerator {
 
     private static BufferedImage renderLinesToImage(List<String> lines) {
         Font reg = new Font(Font.MONOSPACED,Font.PLAIN,12);
-        Font bold= new Font(Font.MONOSPACED,Font.BOLD,14);
+        Font bold = new Font(Font.MONOSPACED,Font.BOLD,14);
         int width = 300, lh = reg.getSize() + 8, height = lh * lines.size() + 20;
         BufferedImage img = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
         Graphics2D g = img.createGraphics();
@@ -140,7 +134,7 @@ public class ReceiptGenerator {
         g.setColor(Color.BLACK);
 
         FontMetrics fmReg = g.getFontMetrics(reg);
-        FontMetrics fmBold= g.getFontMetrics(bold);
+        FontMetrics fmBold = g.getFontMetrics(bold);
         int y = lh, header = 6, footer = lines.size() - 1;
         for (int i = 0; i < lines.size(); i++) {
             String l = lines.get(i);

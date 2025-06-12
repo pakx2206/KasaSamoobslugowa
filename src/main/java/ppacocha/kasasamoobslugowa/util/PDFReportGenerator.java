@@ -57,13 +57,13 @@ public class PDFReportGenerator {
                 cs.newLineAtOffset(0, -20);
 
                 for (Transakcja t : todays) {
-                    cs.showText("Transakcja ID:   " + t.getId());
+                    cs.showText("Transakcja ID: " + t.getId());
                     cs.newLineAtOffset(0, -15);
-                    cs.showText("Data:            " + t.getData());
+                    cs.showText("Data: " + t.getData());
                     cs.newLineAtOffset(0, -15);
-                    cs.showText("Suma:            " + t.getSuma());
+                    cs.showText("Suma: " + t.getSuma());
                     cs.newLineAtOffset(0, -15);
-                    cs.showText("Typ płatności:   " + t.getTypeOfPayment());
+                    cs.showText("Typ płatności: " + t.getTypeOfPayment());
                     cs.newLineAtOffset(0, -20);
                 }
 
@@ -73,7 +73,7 @@ public class PDFReportGenerator {
                 BigDecimal total = todays.stream()
                         .map(Transakcja::getSuma)
                         .reduce(BigDecimal.ZERO, BigDecimal::add);
-                cs.showText("Suma całkowita:   " + total);
+                cs.showText("Suma całkowita: " + total);
 
                 cs.endText();
             }

@@ -50,6 +50,7 @@ public class AppFrame extends JFrame {
     private VirtualKeyboardPanel kb;
     private boolean loyaltyApplied = false;
     private JButton modifyCartButton;
+    private boolean threadAlive;
     public AppFrame() {
 
         kasaService = new KasaService();
@@ -280,7 +281,8 @@ public class AppFrame extends JFrame {
     private void handleScan(String code) {
         if (awaitingModifyAuth && STAFF_NFC_TAG.equals(code)) {
             awaitingModifyAuth = false;
-            if (modifyAuthDialog != null && modifyAuthDialog.isShowing()) modifyAuthDialog.dispose();
+            if (modifyAuthDialog != null && modifyAuthDialog.isShowing())
+                modifyAuthDialog.dispose();
             showModifyCartDialog();
             return;
         }
@@ -350,16 +352,17 @@ public class AppFrame extends JFrame {
     }
     private void resetInactivityTimer() {
         if (inactivityTimer == null) initInactivityTimer();
+        inactivityTimer.setDelay(60_000);
         inactivityTimer.restart();
     }
     private void showInactivityWarning() {
-        final JDialog dlg = new JDialog(this, "Brak aktywności", true);
+        final JDialog dlg = new JDialog(this, LanguageSetup.get(PickedLanguage, "timer.noActivity"), true);
         dlg.setLayout(new BorderLayout(10,10));
-        dlg.add(new JLabel("Czy kontynuować zakupy?", SwingConstants.CENTER), BorderLayout.CENTER);
+        dlg.add(new JLabel(LanguageSetup.get(PickedLanguage, "timer.ask"), SwingConstants.CENTER), BorderLayout.CENTER);
 
         JPanel btns = new JPanel();
-        JButton yes = new JButton("Tak");
-        JButton no  = new JButton("Nie");
+        JButton yes = new JButton(LanguageSetup.get(PickedLanguage, "timer.yes"));
+        JButton no = new JButton(LanguageSetup.get(PickedLanguage, "timer.no"));
         btns.add(yes);
         btns.add(no);
         dlg.add(btns, BorderLayout.SOUTH);
@@ -389,8 +392,10 @@ public class AppFrame extends JFrame {
     private void returnToStart() {
         kasaService.resetSession();
         loyaltyApplied = false;
+        threadAlive = false;
         loyaltyCardButton.setEnabled(true);
         refreshBasketTable();
+        inactivityTimer.stop();
         layout.show(layoutPanel, "card2");
     }
 
@@ -874,7 +879,7 @@ public class AppFrame extends JFrame {
         modifyCartButton.setFont(new Font("Segoe UI", Font.BOLD, 24));
         modifyCartButton.addActionListener(ev -> {
             awaitingModifyAuth = true;
-            showStaffAuthDialog();
+            modifyAuthDialog = showStaffAuthDialog();
         });
 
         JPanel bottom = new JPanel(new BorderLayout());
@@ -974,8 +979,9 @@ public class AppFrame extends JFrame {
         resetInactivityTimer();
         layout.show(layoutPanel, "card3");
         if (reader != null && (nfcThread == null || !nfcThread.isAlive())) {
+            threadAlive = true;
             nfcThread = new Thread(() -> {
-                while (true) {
+                while (threadAlive) {
                     try {
                         String raw = reader.readTextRecord().trim();
                         String digits = raw.replaceFirst("(?i)^n", "");
@@ -1177,8 +1183,8 @@ public class AppFrame extends JFrame {
             BigDecimal totalPrice = unitPrice.multiply(BigDecimal.valueOf(qty));
             suma = suma.add(totalPrice);
 
-            String qtyStr   = qty + "×";
-            String unitStr  = unitPrice.setScale(2, RoundingMode.HALF_UP).toPlainString() + " PLN";
+            String qtyStr = qty + "×";
+            String unitStr = unitPrice.setScale(2, RoundingMode.HALF_UP).toPlainString() + " PLN";
             String totalStr = totalPrice.setScale(2, RoundingMode.HALF_UP).toPlainString() + " PLN";
 
             model.addRow(new Object[]{ p.getName(), qtyStr, unitStr, totalStr });
@@ -1227,7 +1233,7 @@ public class AppFrame extends JFrame {
             JButton plus  = new JButton("+");
             Dimension bsz = new Dimension(70,70);
             minus.setPreferredSize(bsz);
-            plus .setPreferredSize(bsz);
+            plus.setPreferredSize(bsz);
 
             minus.addActionListener(ev -> {
                 int current = localCounts.get(code);
@@ -1238,8 +1244,9 @@ public class AppFrame extends JFrame {
             });
             plus.addActionListener(ev -> {
                 int current = localCounts.getOrDefault(code, 0);
-                localCounts.put(code, current + 1);
-                qtyLabel.setText(String.valueOf(current + 1));
+                int val = Math.min(current + 1, produktDao.findById(code).getQuantity());
+                localCounts.put(code, val);
+                qtyLabel.setText(String.valueOf(val));
             });
 
             row.add(name);
@@ -1272,7 +1279,7 @@ public class AppFrame extends JFrame {
         dlg.setLocationRelativeTo(this);
         dlg.setVisible(true);
     }
-    private void showStaffAuthDialog() {
+    private JDialog showStaffAuthDialog() {
         JDialog dlg = new JDialog(this,
                 LanguageSetup.get(PickedLanguage, "cart.modifyTitle"),
                 Dialog.ModalityType.APPLICATION_MODAL);
@@ -1302,7 +1309,10 @@ public class AppFrame extends JFrame {
         dlg.setSize(600, 300);
         dlg.setResizable(false);
         dlg.setLocationRelativeTo(this);
+        modifyAuthDialog = dlg;
         dlg.setVisible(true);
+        return dlg;
+
     }
 
 

@@ -21,19 +21,19 @@ import java.util.List;
 import java.util.Map;
 
 public class KasaService {
-    private final PromotionDAO    promotionDao    = new MongoPromotionDAO();
-    private final LoyaltyDAO      loyaltyDao      = new MongoLoyaltyDAO();
-    private final ProduktDAO      produktDao      = new MongoProduktDAO();
-    private final KoszykDAO       koszykDao       = new MongoKoszykDAO();
-    private final TransakcjaDAO   transakcjaDao   = new MongoTransakcjaDAO();
+    private final PromotionDAO promotionDao = new MongoPromotionDAO();
+    private final LoyaltyDAO loyaltyDao = new MongoLoyaltyDAO();
+    private final ProduktDAO produktDao = new MongoProduktDAO();
+    private final KoszykDAO koszykDao = new MongoKoszykDAO();
+    private final TransakcjaDAO transakcjaDao = new MongoTransakcjaDAO();
 
-    private String     loyaltyCustomerId = null;
-    private BigDecimal loyaltyDiscount   = BigDecimal.ZERO;
-    private boolean    ageVerified       = false;
-    private LocalDateTime ageVerifiedAt  = null;
+    private String loyaltyCustomerId = null;
+    private BigDecimal loyaltyDiscount = BigDecimal.ZERO;
+    private boolean ageVerified = false;
+    private LocalDateTime ageVerifiedAt = null;
 
-    public void addByCodeOrTag(String raw) {
-        String code = raw.trim();
+    public void addByCodeOrTag(String barCode) {
+        String code = barCode.trim();
         Produkt p = produktDao.findById(code);
         if (p == null) p = produktDao.findByNfcTag(code);
         if (p == null) p = produktDao.findByNfcTag(code.toUpperCase());
@@ -42,7 +42,7 @@ public class KasaService {
             if (!digits.isEmpty()) p = produktDao.findByNfcTag("NFC" + digits);
         }
         if (p == null)
-            throw new IllegalArgumentException("Produkt o identyfikatorze '" + raw + "' nie istnieje w bazie");
+            throw new IllegalArgumentException("Produkt o identyfikatorze '" + barCode + "' nie istnieje w bazie");
         if (p.getQuantity() <= 0)
             throw new IllegalArgumentException("Produkt '" + p.getName() + "' jest niedostępny w magazynie.");
 
@@ -54,7 +54,7 @@ public class KasaService {
     }
 
     public void verifyAge() {
-        this.ageVerified   = true;
+        this.ageVerified = true;
         this.ageVerifiedAt = LocalDateTime.now();
     }
     public List<Produkt> getAllProducts() {
@@ -98,7 +98,7 @@ public class KasaService {
         return koszykDao.findAll();
     }
 
-    public Transakcja finalizeTransaction(String typPlatnosci) {
+    public Transakcja finalizeTransaction(String typeOfPayment) {
         List<Produkt> items = koszykDao.findAll();
         if (items.isEmpty())
             throw new IllegalStateException("Koszyk jest pusty — nie można finalizować transakcji");
@@ -107,6 +107,7 @@ public class KasaService {
         Map<String,Integer> ilosci = new HashMap<>();
         for (Produkt p : items)
             ilosci.merge(p.getBarCode(), 1, Integer::sum);
+
         for (var e : ilosci.entrySet()) {
             Produkt p = items.stream()
                     .filter(x -> x.getBarCode().equals(e.getKey()))
@@ -115,7 +116,7 @@ public class KasaService {
             total = total.add(unit.multiply(BigDecimal.valueOf(e.getValue())));
         }
 
-        Transakcja tx = new Transakcja(items, typPlatnosci);
+        Transakcja tx = new Transakcja(items, typeOfPayment);
         tx.setSuma(total);
         tx.setAgeVerifiedAt(ageVerifiedAt);
 
@@ -131,9 +132,9 @@ public class KasaService {
     public void resetSession() {
         koszykDao.clear();
         loyaltyCustomerId = null;
-        loyaltyDiscount   = BigDecimal.ZERO;
-        ageVerified       = false;
-        ageVerifiedAt     = null;
+        loyaltyDiscount = BigDecimal.ZERO;
+        ageVerified = false;
+        ageVerifiedAt = null;
     }
     public void clearBasket() {
         koszykDao.clear();

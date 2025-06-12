@@ -12,12 +12,12 @@ public class VirtualKeyboardPanel extends JPanel {
     private final String langKey;
 
     public VirtualKeyboardPanel(JTextField target, boolean fullLayout, String langKey) {
-        this.target  = target;
+        this.target = target;
         this.langKey = langKey;
         setBackground(new Color(0x004A99));
         setLayout(new GridBagLayout());
         if (fullLayout) initFull();
-        else           initNumeric();
+        else initNumeric();
     }
 
     private void initFull() {
@@ -81,9 +81,9 @@ public class VirtualKeyboardPanel extends JPanel {
 
     private JButton makeButton(String key) {
         String label = switch (key) {
-            case "SPACE"  -> "SPACE";
-            case "DELETE" -> "DELETE";
-            default        -> key;
+            case "SPACE"->"SPACE";
+            case "DELETE"->"DELETE";
+            default -> key;
         };
 
         JButton b = new JButton(label);
@@ -112,12 +112,12 @@ public class VirtualKeyboardPanel extends JPanel {
                     if (w instanceof JDialog) ((JDialog) w).dispose();
                 }
                 case "DELETE" -> target.setText("");
-                case "←"      -> {
+                case "←" -> {
                     if (!txt.isEmpty())
                         target.setText(txt.substring(0, txt.length() - 1));
                 }
-                case "SPACE"  -> target.setText(target.getText() + " ");
-                default       -> target.setText(target.getText() + label);
+                case "SPACE" -> target.setText(target.getText() + " ");
+                default -> target.setText(target.getText() + label);
             }
 
             target.requestFocusInWindow();
@@ -125,9 +125,9 @@ public class VirtualKeyboardPanel extends JPanel {
 
         b.getModel().addChangeListener(ev -> {
             ButtonModel m = b.getModel();
-            if (m.isPressed())        b.setBackground(new Color(0x004A99));
-            else if (m.isRollover())  b.setBackground(new Color(0x006ECC));
-            else                       b.setBackground(new Color(0x005BBB));
+            if (m.isPressed()) b.setBackground(new Color(0x004A99));
+            else if (m.isRollover()) b.setBackground(new Color(0x006ECC));
+            else b.setBackground(new Color(0x005BBB));
         });
 
         return b;

@@ -49,11 +49,6 @@ public class MongoKoszykDAO implements KoszykDAO {
             String code = d.get("kod_kreskowy").toString();
             int qty = d.getInteger("ilosc", 0);
             Produkt p = produktDao.findById(code);
-            if (p == null) {
-                // wpis w koszyku nie ma odpowiadającego produktu → usuń go i pomiń
-                coll.deleteOne(eq("kod_kreskowy", code));
-                continue;
-            }
             for (int i = 0; i < qty; i++) {
                 out.add(p);
             }
