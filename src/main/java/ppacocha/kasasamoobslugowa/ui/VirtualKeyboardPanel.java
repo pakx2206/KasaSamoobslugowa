@@ -4,8 +4,6 @@ import ppacocha.kasasamoobslugowa.util.LanguageSetup;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
-import java.text.Normalizer;
 
 public class VirtualKeyboardPanel extends JPanel {
     private final JTextField target;

@@ -1,6 +1,5 @@
 package ppacocha.kasasamoobslugowa.ui;
 
-import ppacocha.kasasamoobslugowa.dao.ProduktDAO;
 import ppacocha.kasasamoobslugowa.dao.impl.MongoProduktDAO;
 import ppacocha.kasasamoobslugowa.model.Produkt;
 import ppacocha.kasasamoobslugowa.service.KasaService;
@@ -14,7 +13,6 @@ import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.text.Normalizer;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class ProductSearchPanel extends JPanel {
     private final String langKey;

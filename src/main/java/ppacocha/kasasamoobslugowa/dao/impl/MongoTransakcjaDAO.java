@@ -99,11 +99,4 @@ public class MongoTransakcjaDAO implements TransakcjaDAO {
         return out;
     }
 
-    @Override
-    public void update(Transakcja transakcja) {}
-
-    @Override
-    public void delete(String id) {
-        coll.deleteOne(eq("_id", new ObjectId(id)));
-    }
 }

@@ -7,6 +7,4 @@ public interface TransakcjaDAO {
     String save(Transakcja tx);
     Transakcja findById(String id);
     List<Transakcja> findAll();
-    void delete(String id);
-    void update(Transakcja tx);
 }

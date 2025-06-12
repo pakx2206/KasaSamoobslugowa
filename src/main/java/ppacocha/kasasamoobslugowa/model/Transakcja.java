@@ -47,9 +47,6 @@ public class Transakcja {
     public String getTypeOfPayment() {
         return typeOfPayment;
     }
-    public LocalDateTime getAgeVerifiedAt() {
-        return ageVerifiedAt;
-    }
     public void setAgeVerifiedAt(LocalDateTime ageVerifiedAt) {
         this.ageVerifiedAt = ageVerifiedAt;
     }

@@ -10,20 +10,8 @@ public class Promotion {
         this.productCode = productCode;
         this.discount = discount;
     }
-
-    public String getProductCode() {
-        return productCode;
-    }
-
     public BigDecimal getDiscount() {
         return discount;
     }
 
-    public void setProductCode(String productCode) {
-        this.productCode = productCode;
-    }
-
-    public void setDiscount(BigDecimal discount) {
-        this.discount = discount;
-    }
 }

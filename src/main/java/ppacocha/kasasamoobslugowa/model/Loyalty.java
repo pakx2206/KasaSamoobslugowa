@@ -23,7 +23,4 @@ public class Loyalty {
         this.id = id;
     }
 
-    public void setDiscount(BigDecimal discount) {
-        this.discount = discount;
-    }
 }

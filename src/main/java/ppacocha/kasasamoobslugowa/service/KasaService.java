@@ -90,10 +90,6 @@ public class KasaService {
         this.loyaltyDiscount   = (d != null ? d : BigDecimal.ZERO);
     }
 
-    public String getLoyaltyCustomerId() {
-        return loyaltyCustomerId;
-    }
-
     public List<Produkt> getKoszyk() {
         return koszykDao.findAll();
     }
@@ -136,10 +132,6 @@ public class KasaService {
         ageVerified = false;
         ageVerifiedAt = null;
     }
-    public void clearBasket() {
-        koszykDao.clear();
-    }
-
 
     public BigDecimal getPriceWithDiscount(Produkt product) {
         BigDecimal price = product.getPrice();

@@ -9,9 +9,6 @@ public class AppTheme {
     public static final Color TEXT_COLOR = new Color(0x2B2B2B);
     public static final Color PRIMARY_BUTTON_BG = new Color(0x005A9C);
     public static final Color PRIMARY_BUTTON_FG = new Color(0xFFFFFF);
-    public static final Color SECONDARY_BUTTON_BG = new Color(0x007A33);
-    public static final Color SECONDARY_BUTTON_FG = new Color(0xFFFFFF);
-    public static final Color BORDER_COLOR = new Color(0xCCCCCC);
     public static final Font FONT_LARGE_BOLD = new Font("Segoe UI", Font.BOLD,36);
     public static final Font FONT_MEDIUM_BOLD = new Font("Segoe UI", Font.BOLD,24);
     public static final Font FONT_MEDIUM = new Font("Segoe UI", Font.PLAIN, 24);

@@ -76,38 +76,6 @@ public class MongoProduktDAO implements ProduktDAO {
     }
 
     @Override
-    public void save(Produkt product) {
-        Document d = new Document()
-                .append("kod_kreskowy", product.getBarCode())
-                .append("nazwa",        product.getName())
-                .append("cena",         product.getPrice().doubleValue())
-                .append("nfc_tag",      product.getNfcTag())
-                .append("ilosc",        product.getQuantity())
-                .append("vat_rate",     product.getVatRate().doubleValue())
-                .append("requiresAgeVerification", product.isRequiresAgeVerification());
-        coll.insertOne(d);
-    }
-
-    @Override
-    public void update(Produkt product) {
-        coll.updateOne(eq("kod_kreskowy", product.getBarCode()),
-                new Document("$set", new Document()
-                        .append("nazwa",    product.getName())
-                        .append("cena",     product.getPrice().doubleValue())
-                        .append("nfc_tag",  product.getNfcTag())
-                        .append("ilosc",    product.getQuantity())
-                        .append("vat_rate", product.getVatRate().doubleValue())
-                        .append("requiresAgeVerification", product.isRequiresAgeVerification())
-                )
-        );
-    }
-
-    @Override
-    public void delete(String barCode) {
-        coll.deleteOne(eq("kod_kreskowy", barCode));
-    }
-
-    @Override
     public List<Produkt> findByPartialCode(String fragment) {
         List<Produkt> out = new ArrayList<>();
         for (Document d : coll.find()) {

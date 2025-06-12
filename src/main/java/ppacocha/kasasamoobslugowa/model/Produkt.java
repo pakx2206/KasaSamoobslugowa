@@ -28,41 +28,23 @@ public class Produkt {
   public boolean isRequiresAgeVerification() {
     return requiresAgeVerification;
   }
-  public void setRequiresAgeVerification(boolean requiresAgeVerification) {
-    this.requiresAgeVerification = requiresAgeVerification;
-  }
+
   public String getName() {
     return name;
   }
   public BigDecimal getVatRate() {
         return vatRate;
     }
-  public void setName(String name) {
-    this.name = name;
-  }
-
   public BigDecimal getPrice() {
     return price;
-  }
-
-  public void setPrice(BigDecimal price) {
-    this.price = price;
   }
 
   public String getBarCode() {
     return barCode;
   }
 
-  public void setBarCode(String barCode) {
-    this.barCode = barCode;
-  }
-
   public String getNfcTag() {
     return nfcTag;
-  }
-
-  public void setNfcTag(String nfcTag) {
-    this.nfcTag = nfcTag;
   }
 
   @Override
@@ -88,7 +70,5 @@ public class Produkt {
     public int getQuantity() {
         return quantity;
     }
-    public void setQuantity(int quantity) {
-        this.quantity = quantity;
-    }   
+
 }

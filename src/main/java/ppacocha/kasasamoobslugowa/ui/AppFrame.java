@@ -33,8 +33,6 @@ public class AppFrame extends JFrame {
     private CardReaderNdef reader;
     private String PickedLanguage = "pl";
     private CardLayout layout;
-    private boolean waitingForAgeVerification = false;
-    private boolean staffClosingAllowed = false;
     private Produkt productAwaitingVerification = null;
     private static final String STAFF_NFC_TAG = "NFC01";
     private boolean awaitingModifyAuth = false;

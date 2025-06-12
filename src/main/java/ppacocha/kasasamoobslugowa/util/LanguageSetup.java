@@ -2,13 +2,11 @@
 package ppacocha.kasasamoobslugowa.util;
 
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
 
 public class LanguageSetup {
     private static final Map<String, String> pl = new HashMap<>();
     private static final Map<String, String> en = new HashMap<>();
-    private static String currentLanguage = "pl";
     
     static{
     
