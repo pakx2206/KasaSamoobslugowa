@@ -65,10 +65,6 @@ public class KasaService {
         return produktDao.findByCodeOrNameContaining(fragment);
     }
 
-    public void deleteByCode(String code) {
-        koszykDao.delete(code);
-    }
-
     public void changeQuantityByCode(String code, int quantity) {
         if (quantity <= 0) {
             koszykDao.delete(code);
