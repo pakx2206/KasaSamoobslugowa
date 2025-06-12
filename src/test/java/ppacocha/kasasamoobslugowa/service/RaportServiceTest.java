@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class RaportServiceTest {
 
     @Test
-    void testGenerujRaportDziennyZListyTransakcji() {
+    void testGenerateDailyReportZListyTransakcji() {
         Produkt p1 = new Produkt("A", new BigDecimal("1.00"), "111", "T1");
         Produkt p2 = new Produkt("B", new BigDecimal("2.00"), "222", "T2");
         Transakcja t1 = new Transakcja(Arrays.asList(p1), "CASH");
@@ -21,7 +21,7 @@ class RaportServiceTest {
         List<Transakcja> lista = Arrays.asList(t1, t2);
 
         RaportService rs = new RaportService();
-        String raport = rs.generujRaportDzienny(lista);
+        String raport = rs.generateDailyReport(lista);
 
         assertTrue(raport.startsWith("Raport dzienny"), "Raport powinien zaczynać się od nagłówka");
         assertTrue(raport.contains(p1.toString()), "Raport powinien zawierać opis pierwszej transakcji");
@@ -30,16 +30,16 @@ class RaportServiceTest {
     }
 
     @Test
-    void testGenerujRaportDziennyBezParametrow() {
+    void testGenerateDailyReportBezParametrow() {
         RaportService rs = new RaportService() {
             @Override
-            public String generujRaportDzienny() {
-                return generujRaportDzienny(Arrays.asList(
+            public String generateDailyReport() {
+                return generateDailyReport(Arrays.asList(
                     new Transakcja(Arrays.asList(new Produkt("X", new BigDecimal("5.00"), "777", "T7")), "CASH")
                 ));
             }
         };
-        String r = rs.generujRaportDzienny();
+        String r = rs.generateDailyReport();
         assertTrue(r.contains("Suma: 5.00"), "Raport bezparametrowy powinien zawierać sumę 5.00");
     }
 }

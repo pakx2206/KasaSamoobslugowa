@@ -83,10 +83,10 @@ public class ReceiptGenerator {
         out.add(String.format("%-20s %3s %7s","Towar","Il","Razem"));
         out.add(repeat('-',40));
 
-        Map<String, Long> qty = tx.getProdukty().stream()
-                .collect(Collectors.groupingBy(Produkt::getNazwa,Collectors.counting()));
-        Map<String, Produkt> prodMap = tx.getProdukty().stream()
-                .collect(Collectors.toMap(Produkt::getNazwa, p->p, (a,b)->a));
+        Map<String, Long> qty = tx.getProduct().stream()
+                .collect(Collectors.groupingBy(Produkt::getName,Collectors.counting()));
+        Map<String, Produkt> prodMap = tx.getProduct().stream()
+                .collect(Collectors.toMap(Produkt::getName, p->p, (a, b)->a));
 
         BigDecimal total = BigDecimal.ZERO;
         for (var e: qty.entrySet()) {
@@ -104,7 +104,7 @@ public class ReceiptGenerator {
         out.add(repeat('=',40));
 
         Map<BigDecimal,BigDecimal> taxSum = new TreeMap<>();
-        for (Produkt p : tx.getProdukty()) {
+        for (Produkt p : tx.getProduct()) {
             BigDecimal unit = kasaService.getPriceWithDiscount(p);
             taxSum.merge(p.getVatRate(), unit, BigDecimal::add);
         }

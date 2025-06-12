@@ -12,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class TransakcjaTest {
 
     @Test
-    void testObliczSumeDlaDwochProduktow() {
+    void testCalculateSumDlaDwochProduktow() {
         Produkt p1 = new Produkt("A", new BigDecimal("2.50"), "111", "TAG1");
         Produkt p2 = new Produkt("B", new BigDecimal("3.75"), "222", "TAG2");
         Transakcja t = new Transakcja(Arrays.asList(p1, p2), "CASH");
@@ -21,7 +21,7 @@ class TransakcjaTest {
     }
 
     @Test
-    void testObliczSumeDlaPustejListy() {
+    void testCalculateSumDlaPustejListy() {
         Transakcja t = new Transakcja(Collections.emptyList(), "CARD");
         assertEquals(BigDecimal.ZERO, t.getSuma(), "Dla pustej listy suma powinna być 0");
     }
@@ -29,7 +29,7 @@ class TransakcjaTest {
     @Test
     void testGetTypPlatnosci() {
         Transakcja t = new Transakcja(Collections.emptyList(), "KARTA");
-        assertEquals("KARTA", t.getTypPlatnosci(), "Typ płatności powinien się zgadzać");
+        assertEquals("KARTA", t.getTypeOfPayment(), "Typ płatności powinien się zgadzać");
     }
 
     @Test

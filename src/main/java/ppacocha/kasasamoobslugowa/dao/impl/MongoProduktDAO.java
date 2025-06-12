@@ -49,11 +49,11 @@ public class MongoProduktDAO implements ProduktDAO {
     }
 
     @Override
-    public Produkt findById(String kod) {
-        Document d = coll.find(eq("kod_kreskowy", kod)).first();
+    public Produkt findById(String barCode) {
+        Document d = coll.find(eq("kod_kreskowy", barCode)).first();
         if (d == null) {
             try {
-                long num = Long.parseLong(kod);
+                long num = Long.parseLong(barCode);
                 d = coll.find(eq("kod_kreskowy", num)).first();
             } catch (NumberFormatException ignored) {}
         }
@@ -76,35 +76,35 @@ public class MongoProduktDAO implements ProduktDAO {
     }
 
     @Override
-    public void save(Produkt p) {
+    public void save(Produkt product) {
         Document d = new Document()
-                .append("kod_kreskowy", p.getKodKreskowy())
-                .append("nazwa",        p.getNazwa())
-                .append("cena",         p.getCena().doubleValue())
-                .append("nfc_tag",      p.getNfcTag())
-                .append("ilosc",        p.getIlosc())
-                .append("vat_rate",     p.getVatRate().doubleValue())
-                .append("requiresAgeVerification", p.isRequiresAgeVerification());
+                .append("kod_kreskowy", product.getBarCode())
+                .append("nazwa",        product.getName())
+                .append("cena",         product.getPrice().doubleValue())
+                .append("nfc_tag",      product.getNfcTag())
+                .append("ilosc",        product.getQuantity())
+                .append("vat_rate",     product.getVatRate().doubleValue())
+                .append("requiresAgeVerification", product.isRequiresAgeVerification());
         coll.insertOne(d);
     }
 
     @Override
-    public void update(Produkt p) {
-        coll.updateOne(eq("kod_kreskowy", p.getKodKreskowy()),
+    public void update(Produkt product) {
+        coll.updateOne(eq("kod_kreskowy", product.getBarCode()),
                 new Document("$set", new Document()
-                        .append("nazwa",    p.getNazwa())
-                        .append("cena",     p.getCena().doubleValue())
-                        .append("nfc_tag",  p.getNfcTag())
-                        .append("ilosc",    p.getIlosc())
-                        .append("vat_rate", p.getVatRate().doubleValue())
-                        .append("requiresAgeVerification", p.isRequiresAgeVerification())
+                        .append("nazwa",    product.getName())
+                        .append("cena",     product.getPrice().doubleValue())
+                        .append("nfc_tag",  product.getNfcTag())
+                        .append("ilosc",    product.getQuantity())
+                        .append("vat_rate", product.getVatRate().doubleValue())
+                        .append("requiresAgeVerification", product.isRequiresAgeVerification())
                 )
         );
     }
 
     @Override
-    public void delete(String kod) {
-        coll.deleteOne(eq("kod_kreskowy", kod));
+    public void delete(String barCode) {
+        coll.deleteOne(eq("kod_kreskowy", barCode));
     }
 
     @Override
@@ -120,12 +120,12 @@ public class MongoProduktDAO implements ProduktDAO {
     }
 
     @Override
-    public void zmniejszStan(String kod, int amount) {
+    public void reduceStock(String barCode, int amount) {
         Object filterVal;
         try {
-            filterVal = Long.parseLong(kod);
+            filterVal = Long.parseLong(barCode);
         } catch (NumberFormatException ex) {
-            filterVal = kod;
+            filterVal = barCode;
         }
         coll.updateOne(
                 new Document("kod_kreskowy", filterVal),
@@ -134,10 +134,10 @@ public class MongoProduktDAO implements ProduktDAO {
     }
 
     @Override
-    public List<Produkt> findByCodeOrNameContaining(String fragment) {
+    public List<Produkt> findByCodeOrNameContaining(String string) {
         List<Produkt> out = new ArrayList<>();
-        Bson regexCode = Filters.regex("kod_kreskowy", fragment, "i");
-        Bson regexName = Filters.regex("nazwa",        fragment, "i");
+        Bson regexCode = Filters.regex("kod_kreskowy", string, "i");
+        Bson regexName = Filters.regex("nazwa", string, "i");
         for (Document d : coll.find(Filters.or(regexCode, regexName))) {
             out.add(docToProdukt(d));
         }

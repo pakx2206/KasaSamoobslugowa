@@ -6,36 +6,36 @@ import java.math.BigDecimal;
 
 public class Transakcja {
     private String id;
-    private final List<Produkt> produkty;
+    private final List<Produkt> product;
     private LocalDateTime data;
     private BigDecimal suma;
-    private final String typPlatnosci;
+    private final String typeOfPayment;
     private String ageVerifiedBy;
     private LocalDateTime ageVerifiedAt;
     private String nip;
 
-    public Transakcja(List<Produkt> produkty, String typPlatnosci) {
-        this.produkty = produkty;
+    public Transakcja(List<Produkt> product, String typeOfPayment) {
+        this.product = product;
         this.data = LocalDateTime.now();
-        this.suma = obliczSume();
-        this.typPlatnosci = typPlatnosci;
+        this.suma = calculateSum();
+        this.typeOfPayment = typeOfPayment;
     }
 
-    private BigDecimal obliczSume() {
-        return produkty.stream()
-                .map(Produkt::getCena)
+    private BigDecimal calculateSum() {
+        return product.stream()
+                .map(Produkt::getPrice)
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
     }
 
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
 
-    public List<Produkt> getProdukty() { return produkty; }
+    public List<Produkt> getProduct() { return product; }
     public LocalDateTime getData() { return data; }
     public void setData(LocalDateTime data) { this.data = data; }
     public BigDecimal getSuma() { return suma; }
     public void setSuma(BigDecimal suma) { this.suma = suma; }
-    public String getTypPlatnosci() { return typPlatnosci; }
+    public String getTypeOfPayment() { return typeOfPayment; }
     public LocalDateTime getAgeVerifiedAt() { return ageVerifiedAt; }
     public void setAgeVerifiedAt(LocalDateTime ageVerifiedAt) { this.ageVerifiedAt = ageVerifiedAt; }
 
@@ -48,9 +48,9 @@ public class Transakcja {
                 "id=" + id +
                 ", data=" + data +
                 ", suma=" + suma +
-                ", typPlatnosci='" + typPlatnosci + '\'' +
+                ", typPlatnosci='" + typeOfPayment + '\'' +
                 (nip != null ? ", nip='" + nip + '\'' : "") +
-                ", iloscProd=" + produkty.size() +
+                ", iloscProd=" + product.size() +
                 '}';
     }
 }

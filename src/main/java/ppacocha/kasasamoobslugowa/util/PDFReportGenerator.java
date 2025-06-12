@@ -63,7 +63,7 @@ public class PDFReportGenerator {
                     cs.newLineAtOffset(0, -15);
                     cs.showText("Suma:            " + t.getSuma());
                     cs.newLineAtOffset(0, -15);
-                    cs.showText("Typ płatności:   " + t.getTypPlatnosci());
+                    cs.showText("Typ płatności:   " + t.getTypeOfPayment());
                     cs.newLineAtOffset(0, -20);
                 }
 

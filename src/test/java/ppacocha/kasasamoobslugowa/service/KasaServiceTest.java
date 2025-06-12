@@ -79,70 +79,70 @@ class KasaServiceTest {
     }
 
     @Test
-    void testDodajPoKodzieLubTaguNieistniejacyProdukt() {
+    void testAddByCodeOrTagNieistniejacyProdukt() {
         IllegalArgumentException ex = assertThrows(
             IllegalArgumentException.class,
-            () -> kasa.dodajPoKodzieLubTagu("UNKNOWN")
+            () -> kasa.addByCodeOrTag("UNKNOWN")
         );
         assertTrue(ex.getMessage().toLowerCase().contains("nie istnieje"));
     }
 
     @Test
-    void testDodajPoKodzieLubTaguProduktDostepny() {
-        kasa.dodajPoKodzieLubTagu("P1");
+    void testAddByCodeOrTagProduktDostepny() {
+        kasa.addByCodeOrTag("P1");
         List<Produkt> koszyk = kasa.getKoszyk();
         assertFalse(koszyk.isEmpty());
-        assertEquals("P1", koszyk.get(0).getKodKreskowy());
+        assertEquals("P1", koszyk.get(0).getBarCode());
     }
 
     @Test
-    void testUsunPoKodzie() {
-        kasa.dodajPoKodzieLubTagu("P1");
-        kasa.usunPoKodzie("P1");
+    void testDeleteByCode() {
+        kasa.addByCodeOrTag("P1");
+        kasa.deleteByCode("P1");
         assertTrue(kasa.getKoszyk().isEmpty());
     }
 
     @Test
-    void testZmienIloscPoKodzieNaZeroKasuje() {
-        kasa.dodajPoKodzieLubTagu("P1");
-        kasa.zmienIloscPoKodzie("P1", 0);
+    void testChangeQuantityByCodeNaZeroKasuje() {
+        kasa.addByCodeOrTag("P1");
+        kasa.changeQuantityByCode("P1", 0);
         assertTrue(kasa.getKoszyk().isEmpty());
     }
 
     @Test
-    void testZmienIloscPoKodzieNaWiecej() {
-        kasa.dodajPoKodzieLubTagu("P1");
-        kasa.dodajPoKodzieLubTagu("P1");
-        kasa.zmienIloscPoKodzie("P1", 3);
+    void testChangeQuantityByCodeNaWiecej() {
+        kasa.addByCodeOrTag("P1");
+        kasa.addByCodeOrTag("P1");
+        kasa.changeQuantityByCode("P1", 3);
         long count = kasa.getKoszyk().stream()
-                         .filter(p -> p.getKodKreskowy().equals("P1"))
+                         .filter(p -> p.getBarCode().equals("P1"))
                          .count();
         assertEquals(3, count);
     }
 
     @Test
-    void testFinalizujTransakcjePustyKoszyk() {
+    void testFinalizeTransactionPustyKoszyk() {
         IllegalStateException ex = assertThrows(
             IllegalStateException.class,
-            () -> kasa.finalizujTransakcje("CASH")
+            () -> kasa.finalizeTransaction("CASH")
         );
         assertTrue(ex.getMessage().toLowerCase().contains("koszyk jest pusty"));
     }
 
     @Test
-    void testFinalizujTransakcjePoprawnie() {
-        kasa.dodajPoKodzieLubTagu("P1");
-        var tx = kasa.finalizujTransakcje("CARD");
+    void testFinalizeTransactionPoprawnie() {
+        kasa.addByCodeOrTag("P1");
+        var tx = kasa.finalizeTransaction("CARD");
         assertNotNull(tx, "Transakcja nie może być null");
         assertEquals(0, tx.getSuma().compareTo(new BigDecimal("5.00")), "Suma transakcji powinna być 5.00");
         assertTrue(kasa.getKoszyk().isEmpty());
-        assertEquals("CARD", tx.getTypPlatnosci());
+        assertEquals("CARD", tx.getTypeOfPayment());
     }
 
     @Test
-    void testSzukajPoFragmencieKodu() {
-        var wyn = kasa.szukajPoFragmencieKodu("P");
+    void testFindByPartialCode() {
+        var wyn = kasa.findByPartialCode("P");
         assertEquals(1, wyn.size());
-        assertEquals("P1", wyn.get(0).getKodKreskowy());
+        assertEquals("P1", wyn.get(0).getBarCode());
     }
 }

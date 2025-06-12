@@ -8,7 +8,6 @@ import javax.swing.*;
 import javax.swing.SwingUtilities;
 import java.awt.*;
 import java.math.BigDecimal;
-import java.util.List;
 
 public class CartPanel extends JPanel {
     private final KasaService kasaService;
@@ -117,7 +116,7 @@ public class CartPanel extends JPanel {
             if (added.isRequiresAgeVerification() && !kasaService.isAgeVerified()) {
                 int ok = JOptionPane.showConfirmDialog(
                         this,
-                        "Produkt \"" + added.getNazwa() + "\" wymaga potwierdzenia wieku (18+).\n" +
+                        "Produkt \"" + added.getName() + "\" wymaga potwierdzenia wieku (18+).\n" +
                                 "Czy klient ma ukończone 18 lat?",
                         "Weryfikacja wieku",
                         JOptionPane.YES_NO_OPTION,
@@ -125,7 +124,7 @@ public class CartPanel extends JPanel {
                 if (ok == JOptionPane.YES_OPTION) {
                     kasaService.verifyAge();
                 } else {
-                    kasaService.usunPoKodzie(added.getKodKreskowy());
+                    kasaService.deleteByCode(added.getBarCode());
                     JOptionPane.showMessageDialog(this,
                             "Nie można sprzedać produktu bez potwierdzenia wieku.",
                             "Błąd weryfikacji", JOptionPane.ERROR_MESSAGE);
@@ -156,7 +155,7 @@ public class CartPanel extends JPanel {
     private void removeProduct() {
         Produkt selected = productList.getSelectedValue();
         if (selected != null) {
-            kasaService.usunPoKodzie(selected.getKodKreskowy());
+            kasaService.deleteByCode(selected.getBarCode());
             refreshList();
         }
     }
@@ -166,11 +165,11 @@ public class CartPanel extends JPanel {
         if (selected != null) {
             String input = JOptionPane.showInputDialog(
                 this,
-                "Nowa ilość dla " + selected.getKodKreskowy() + ":"
+                "Nowa ilość dla " + selected.getBarCode() + ":"
             );
             try {
                 int qty = Integer.parseInt(input);
-                kasaService.zmienIloscPoKodzie(selected.getKodKreskowy(), qty);
+                kasaService.changeQuantityByCode(selected.getBarCode(), qty);
                 refreshList();
             } catch (NumberFormatException ex) {
                 JOptionPane.showMessageDialog(this, "Niepoprawna ilość.");
@@ -195,14 +194,14 @@ public class CartPanel extends JPanel {
         String typPlatnosci = options[choice];
         Transakcja t;
         try {
-            t = kasaService.finalizujTransakcje(typPlatnosci);
+            t = kasaService.finalizeTransaction(typPlatnosci);
         } catch (IllegalStateException ex) {
             JOptionPane.showMessageDialog(this, ex.getMessage(), "Błąd", JOptionPane.ERROR_MESSAGE);
             return;
         }
         JOptionPane.showMessageDialog(
             this,
-            "Transakcja zakończona.\nSuma: " + t.getSuma() + " PLN\nPłatność: " + t.getTypPlatnosci(),
+            "Transakcja zakończona.\nSuma: " + t.getSuma() + " PLN\nPłatność: " + t.getTypeOfPayment(),
             "Potwierdzenie", JOptionPane.INFORMATION_MESSAGE);
         refreshList();
         mainFrame.getCardLayout().show(mainFrame.getCards(), "START");

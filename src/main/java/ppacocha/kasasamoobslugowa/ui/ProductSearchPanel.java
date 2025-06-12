@@ -38,29 +38,24 @@ public class ProductSearchPanel extends JPanel {
         setLayout(new BorderLayout(10,10));
         setBackground(AppTheme.SECONDARY_BACKGROUND);
 
-        // ==== siatka produktów ====
         itemGrid.setLayout(new GridLayout(0, 4, 10, 10));
         JScrollPane scroll = new JScrollPane(itemGrid,
                 JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
                 JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         scroll.getViewport().setBackground(AppTheme.BACKGROUND);
-        // płynniejszy scroll
         scroll.getVerticalScrollBar().setUnitIncrement(50);
         add(scroll, BorderLayout.CENTER);
 
-        // ==== dolny panel: label + pole + powrót + klawiatura ====
-        // etykieta wyszukiwania
         JLabel searchLabel = new JLabel(LanguageSetup.get(langKey, "search.find"));
         searchLabel.setFont(AppTheme.FONT_MEDIUM_BOLD);
         searchLabel.setForeground(AppTheme.TEXT_COLOR);
         searchLabel.setLabelFor(searchField);
 
-        // pole wyszukiwania puste na start
         searchField.setText("");
         searchField.setFont(AppTheme.FONT_MEDIUM);
         searchField.setForeground(AppTheme.TEXT_COLOR);
         searchField.addFocusListener(new FocusAdapter(){
-            @Override public void focusGained(FocusEvent e) { /* nic nie czyścimy */ }
+            @Override public void focusGained(FocusEvent e) { /* l */ }
         });
 
         JPanel bottom = new JPanel(new BorderLayout(5,5));
@@ -76,7 +71,6 @@ public class ProductSearchPanel extends JPanel {
         backButton.addActionListener(e -> onBack.run());
         bottom.add(backButton, BorderLayout.EAST);
 
-        // klawiatura
         VirtualKeyboardPanel vk = new VirtualKeyboardPanel(searchField, true, langKey);
         vk.setPreferredSize(new Dimension(0, 200));
 
@@ -86,17 +80,14 @@ public class ProductSearchPanel extends JPanel {
         south.add(vk,     BorderLayout.CENTER);
         add(south, BorderLayout.SOUTH);
 
-        // od razu focus na pole
         SwingUtilities.invokeLater(() -> searchField.requestFocusInWindow());
 
-        // filtr / reload
         searchField.getDocument().addDocumentListener(new DocumentListener() {
             public void insertUpdate(DocumentEvent e) { reloadGrid(); }
             public void removeUpdate(DocumentEvent e) { reloadGrid(); }
             public void changedUpdate(DocumentEvent e){ reloadGrid(); }
         });
 
-        // początkowe wczytanie
         reloadGrid();
     }
 
@@ -110,12 +101,12 @@ public class ProductSearchPanel extends JPanel {
 
         List<Produkt> filtered = all.stream()
                 .filter(p -> {
-                    String name = p.getNazwa().toLowerCase();
+                    String name = p.getName().toLowerCase();
                     String nameNorm = Normalizer.normalize(name, Normalizer.Form.NFD)
                             .replaceAll("\\p{M}", "");
                     return q.isEmpty()
                             || nameNorm.contains(q)
-                            || p.getKodKreskowy().contains(q);
+                            || p.getBarCode().contains(q);
                 })
                 .collect(Collectors.toList());
 
@@ -128,16 +119,14 @@ public class ProductSearchPanel extends JPanel {
     }
 
     private JButton makeProductButton(Produkt p) {
-        // wczytanie i skalowanie miniatury
-        ImageIcon raw = loadRawIcon(p.getKodKreskowy());
+        ImageIcon raw = loadRawIcon(p.getBarCode());
         Image img = raw.getImage().getScaledInstance(120, 80, Image.SCALE_SMOOTH);
         ImageIcon icon = new ImageIcon(img);
 
-        JButton b = new JButton("<html><center>" + p.getNazwa() + "</center></html>", icon);
+        JButton b = new JButton("<html><center>" + p.getName() + "</center></html>", icon);
         b.setVerticalTextPosition(SwingConstants.BOTTOM);
         b.setHorizontalTextPosition(SwingConstants.CENTER);
 
-        // estetyczne ramki, tło i font
         b.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(new Color(0xCCCCCC)),
                 BorderFactory.createEmptyBorder(12,12,12,12)
@@ -148,14 +137,12 @@ public class ProductSearchPanel extends JPanel {
         b.setForeground(new Color(0x2B2B2B));
         b.setFocusPainted(false);
 
-        // efekt hover/pressed
         b.getModel().addChangeListener(e -> {
             ButtonModel m = b.getModel();
             if (m.isPressed())        b.setBackground(new Color(0xF0F0F0));
             else if (m.isRollover())  b.setBackground(new Color(0xFEFEFE));
             else                       b.setBackground(Color.WHITE);
         });
-        // widoczna ramka na focus
         b.addFocusListener(new FocusAdapter(){
             public void focusGained(FocusEvent e) {
                 b.setBorder(BorderFactory.createCompoundBorder(
@@ -171,12 +158,11 @@ public class ProductSearchPanel extends JPanel {
             }
         });
 
-        b.addActionListener(e -> onProductSelected.accept(p.getKodKreskowy()));
-        b.getAccessibleContext().setAccessibleName(p.getNazwa());
+        b.addActionListener(e -> onProductSelected.accept(p.getBarCode()));
+        b.getAccessibleContext().setAccessibleName(p.getName());
         return b;
     }
 
-    /** ładuje ikonę (zasób /images/KOD.png) lub pusty placeholder */
     private ImageIcon loadRawIcon(String code) {
         try {
             return new ImageIcon(getClass().getResource("/images/" + code + ".png"));

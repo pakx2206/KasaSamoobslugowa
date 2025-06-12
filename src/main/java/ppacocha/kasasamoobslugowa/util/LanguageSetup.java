@@ -27,7 +27,7 @@ public class LanguageSetup {
         pl.put("payment.cash",               "Zaplac gotowka");
         pl.put("payment.card",               "Zaplac karta");
         pl.put("language.pl",                "Polski");
-        pl.put("language.en",                "Angielski");
+        pl.put("language.en",                "English");
         pl.put("column.productName",         "Nazwa Produktu");
         pl.put("column.quantity",            "Ilosc");
         pl.put("column.unitPrice",            "Cena jedn.");
@@ -86,7 +86,7 @@ public class LanguageSetup {
         en.put("cart.addManual",             "Add product");
         en.put("payment.cash",               "Pay by Cash");
         en.put("payment.card",               "Pay by Card");
-        en.put("language.pl",                "Polish");
+        en.put("language.pl",                "Polski");
         en.put("language.en",                "English");
         en.put("column.productName",         "Product Name");
         en.put("column.quantity",            "Quantity");

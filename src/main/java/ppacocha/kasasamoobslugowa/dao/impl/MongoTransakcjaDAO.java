@@ -30,17 +30,17 @@ public class MongoTransakcjaDAO implements TransakcjaDAO {
 
     @Override
     public String save(Transakcja tx) {
-        List<Document> items = tx.getProdukty().stream()
-                .collect(Collectors.groupingBy(Produkt::getKodKreskowy, Collectors.counting()))
+        List<Document> items = tx.getProduct().stream()
+                .collect(Collectors.groupingBy(Produkt::getBarCode, Collectors.counting()))
                 .entrySet().stream()
                 .map(e -> new Document()
                         .append("kod_kreskowy", e.getKey())
                         .append("ilosc", e.getValue().intValue())
                         .append("cena_jednostkowa",
-                                tx.getProdukty().stream()
-                                        .filter(p -> p.getKodKreskowy().equals(e.getKey()))
+                                tx.getProduct().stream()
+                                        .filter(p -> p.getBarCode().equals(e.getKey()))
                                         .findFirst().get()
-                                        .getCena().doubleValue()
+                                        .getPrice().doubleValue()
                         )
                 )
                 .collect(Collectors.toList());
@@ -48,7 +48,7 @@ public class MongoTransakcjaDAO implements TransakcjaDAO {
         Document doc = new Document()
                 .append("data",     FMT.format(tx.getData()))
                 .append("suma",     tx.getSuma().doubleValue())
-                .append("typ_platnosci", tx.getTypPlatnosci())
+                .append("typ_platnosci", tx.getTypeOfPayment())
                 .append("produkty", items);
 
         InsertOneResult res = coll.insertOne(doc);
@@ -62,7 +62,6 @@ public class MongoTransakcjaDAO implements TransakcjaDAO {
         if (d == null) return null;
 
         List<Produkt> products = new ArrayList<>();
-        @SuppressWarnings("unchecked")
         List<Document> items = (List<Document>) d.get("produkty");
         for (Document it : items) {
             String name     = it.getString("nazwa");

@@ -4,11 +4,11 @@ import ppacocha.kasasamoobslugowa.model.Produkt;
 import java.util.List;
 
 public interface KoszykDAO {
-    void add(String kodKreskowy, int amount);
-    void update(String kodKreskowy, int amount);
-    void delete(String kodKreskowy);
+    void add(String barCode, int amount);
+    void update(String barCode, int amount);
+    void delete(String barCode);
     List<Produkt> findAll();
     void clear();
-    public void addProduct(Produkt p);
+    public void addProduct(Produkt product);
 
 }

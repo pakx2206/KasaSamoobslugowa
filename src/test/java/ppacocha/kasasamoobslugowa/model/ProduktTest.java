@@ -11,9 +11,9 @@ public class ProduktTest {
     BigDecimal cena = new BigDecimal("12.50");
     Produkt p = new Produkt("Chleb", cena, "1234567890123", "NFC-TAG-001");
 
-    assertEquals("Chleb", p.getNazwa(),    "Nazwa produktu powinna być ustawiona poprawnie");
-    assertEquals(cena, p.getCena(),       "Cena produktu powinna być ustawiona poprawnie");
-    assertEquals("1234567890123", p.getKodKreskowy(), "Kod kreskowy powinien być ustawiony poprawnie");
+    assertEquals("Chleb", p.getName(),    "Nazwa produktu powinna być ustawiona poprawnie");
+    assertEquals(cena, p.getPrice(),       "Cena produktu powinna być ustawiona poprawnie");
+    assertEquals("1234567890123", p.getBarCode(), "Kod kreskowy powinien być ustawiony poprawnie");
     assertEquals("NFC-TAG-001", p.getNfcTag(),         "Tag NFC powinien być ustawiony poprawnie");
 }
     @Test

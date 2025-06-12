@@ -4,13 +4,13 @@ import ppacocha.kasasamoobslugowa.model.Produkt;
 import java.util.List;
 
 public interface ProduktDAO {
-    Produkt findById(String kodKreskowy);
+    Produkt findById(String barCode);
     Produkt findByNfcTag(String nfcTag);
     List<Produkt> findAll();
-    void save(Produkt produkt);
-    void update(Produkt produkt);
-    void delete(String kodKreskowy);
+    void save(Produkt product);
+    void update(Produkt product);
+    void delete(String barCode);
     List<Produkt> findByPartialCode(String partialCode);
-    void zmniejszStan(String kodKreskowy, int amount);
-    List<Produkt> findByCodeOrNameContaining(String fragment);
+    void reduceStock(String barCode, int amount);
+    List<Produkt> findByCodeOrNameContaining(String string);
 }

@@ -23,23 +23,23 @@ public class MongoKoszykDAO implements KoszykDAO {
     }
 
     @Override
-    public void add(String kodKreskowy, int amount) {
-        coll.updateOne(eq("kod_kreskowy", kodKreskowy),
+    public void add(String barCode, int amount) {
+        coll.updateOne(eq("kod_kreskowy", barCode),
                 inc("ilosc", amount),
                 new com.mongodb.client.model.UpdateOptions().upsert(true)
         );
     }
 
     @Override
-    public void update(String kodKreskowy, int amount) {
-        coll.updateOne(eq("kod_kreskowy", kodKreskowy),
+    public void update(String barCode, int amount) {
+        coll.updateOne(eq("kod_kreskowy", barCode),
                 new Document("$set", new Document("ilosc", amount))
         );
     }
 
     @Override
-    public void delete(String kodKreskowy) {
-        coll.deleteOne(eq("kod_kreskowy", kodKreskowy));
+    public void delete(String barCode) {
+        coll.deleteOne(eq("kod_kreskowy", barCode));
     }
 
     @Override
@@ -67,7 +67,7 @@ public class MongoKoszykDAO implements KoszykDAO {
     }
 
     @Override
-    public void addProduct(Produkt produkt) {
-        add(produkt.getKodKreskowy(), 1);
+    public void addProduct(Produkt product) {
+        add(product.getBarCode(), 1);
     }
 }

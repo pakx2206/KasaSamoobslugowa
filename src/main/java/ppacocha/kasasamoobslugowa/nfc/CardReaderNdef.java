@@ -5,9 +5,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Utility for reading NDEF Text Records from an NFC tag via PC/SC.
- */
 public class CardReaderNdef {
     private final CardTerminal terminal;
 
@@ -22,10 +19,6 @@ public class CardReaderNdef {
         System.out.println("Using terminal: " + terminal.getName());
     }
 
-    /**
-     * Blocks until a tag is presented, reads the first NDEF Text Record, then waits for removal.
-     * @return the text payload from the NDEF record
-     */
     public String readTextRecord() throws Exception {
         System.out.println("Waiting for tag on terminal: " + terminal.getName());
         terminal.waitForCardPresent(0);

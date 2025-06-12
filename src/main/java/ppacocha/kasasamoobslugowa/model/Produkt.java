@@ -4,27 +4,27 @@ import java.math.BigDecimal;
 import java.util.Objects;
 
 public class Produkt {
-  private String nazwa;
-  private BigDecimal cena;
-  private String kodKreskowy;
+  private String name;
+  private BigDecimal price;
+  private String barCode;
   private String nfcTag;
-  private int ilosc;
+  private int quantity;
   private BigDecimal vatRate;
   private boolean requiresAgeVerification;
 
 
-  public Produkt(String nazwa, BigDecimal cena, String kodKreskowy,
-                   String nfcTag, int ilosc, BigDecimal vatRate, boolean requiresAgeVerification) {
-        this.nazwa       = nazwa;
-        this.cena        = cena;
-        this.kodKreskowy = kodKreskowy;
+  public Produkt(String name, BigDecimal price, String barCode,
+                 String nfcTag, int quantity, BigDecimal vatRate, boolean requiresAgeVerification) {
+        this.name = name;
+        this.price = price;
+        this.barCode = barCode;
         this.nfcTag      = nfcTag;
-        this.ilosc       = ilosc;
+        this.quantity = quantity;
         this.vatRate     = vatRate;
         this.requiresAgeVerification = requiresAgeVerification;
   }
-  public Produkt(String nazwa, BigDecimal cena, String kodKreskowy, String nfcTag,  boolean requiresAgeVerification) {
-        this(nazwa, cena, kodKreskowy, nfcTag, 0, BigDecimal.valueOf(0.23), requiresAgeVerification);
+  public Produkt(String name, BigDecimal price, String barCode, String nfcTag, boolean requiresAgeVerification) {
+        this(name, price, barCode, nfcTag, 0, BigDecimal.valueOf(0.23), requiresAgeVerification);
   }
   public boolean isRequiresAgeVerification() {
     return requiresAgeVerification;
@@ -32,30 +32,30 @@ public class Produkt {
   public void setRequiresAgeVerification(boolean requiresAgeVerification) {
     this.requiresAgeVerification = requiresAgeVerification;
   }
-  public String getNazwa() {
-    return nazwa;
+  public String getName() {
+    return name;
   }
   public BigDecimal getVatRate() {
         return vatRate;
     }
-  public void setNazwa(String nazwa) {
-    this.nazwa = nazwa;
+  public void setName(String name) {
+    this.name = name;
   }
 
-  public BigDecimal getCena() {
-    return cena;
+  public BigDecimal getPrice() {
+    return price;
   }
 
-  public void setCena(BigDecimal cena) {
-    this.cena = cena;
+  public void setPrice(BigDecimal price) {
+    this.price = price;
   }
 
-  public String getKodKreskowy() {
-    return kodKreskowy;
+  public String getBarCode() {
+    return barCode;
   }
 
-  public void setKodKreskowy(String kodKreskowy) {
-    this.kodKreskowy = kodKreskowy;
+  public void setBarCode(String barCode) {
+    this.barCode = barCode;
   }
 
   public String getNfcTag() {
@@ -71,23 +71,23 @@ public class Produkt {
     if (this == o) return true;
     if (!(o instanceof Produkt)) return false;
     Produkt produkt = (Produkt) o;
-    return Objects.equals(kodKreskowy, produkt.kodKreskowy);
+    return Objects.equals(barCode, produkt.barCode);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(kodKreskowy);
+    return Objects.hash(barCode);
   }
 
   @Override
   public String toString() {
-      return nazwa + " (" + kodKreskowy + ")";
+      return name + " (" + barCode + ")";
   }
 
-    public int getIlosc() {
-        return ilosc;
+    public int getQuantity() {
+        return quantity;
     }
-    public void setIlosc(int ilosc) {
-        this.ilosc = ilosc;
+    public void setQuantity(int quantity) {
+        this.quantity = quantity;
     }   
 }

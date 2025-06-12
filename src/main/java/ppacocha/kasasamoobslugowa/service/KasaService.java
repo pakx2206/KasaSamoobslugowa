@@ -16,7 +16,6 @@ import java.time.LocalDateTime;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,7 +32,7 @@ public class KasaService {
     private boolean    ageVerified       = false;
     private LocalDateTime ageVerifiedAt  = null;
 
-    public void dodajPoKodzieLubTagu(String raw) {
+    public void addByCodeOrTag(String raw) {
         String code = raw.trim();
         Produkt p = produktDao.findById(code);
         if (p == null) p = produktDao.findByNfcTag(code);
@@ -44,8 +43,8 @@ public class KasaService {
         }
         if (p == null)
             throw new IllegalArgumentException("Produkt o identyfikatorze '" + raw + "' nie istnieje w bazie");
-        if (p.getIlosc() <= 0)
-            throw new IllegalArgumentException("Produkt '" + p.getNazwa() + "' jest niedostępny w magazynie.");
+        if (p.getQuantity() <= 0)
+            throw new IllegalArgumentException("Produkt '" + p.getName() + "' jest niedostępny w magazynie.");
 
         koszykDao.addProduct(p);
     }
@@ -62,23 +61,23 @@ public class KasaService {
         return produktDao.findAll();
     }
 
-    public List<Produkt> szukajPoKodLubNazwie(String fragment) {
+    public List<Produkt> searchByCodeOrName(String fragment) {
         return produktDao.findByCodeOrNameContaining(fragment);
     }
 
-    public void usunPoKodzie(String kodKreskowy) {
-        koszykDao.delete(kodKreskowy);
+    public void deleteByCode(String code) {
+        koszykDao.delete(code);
     }
 
-    public void zmienIloscPoKodzie(String kodKreskowy, int ilosc) {
-        if (ilosc <= 0) {
-            koszykDao.delete(kodKreskowy);
+    public void changeQuantityByCode(String code, int quantity) {
+        if (quantity <= 0) {
+            koszykDao.delete(code);
         } else {
-            koszykDao.update(kodKreskowy, ilosc);
+            koszykDao.update(code, quantity);
         }
     }
 
-    public List<Produkt> szukajPoFragmencieKodu(String fragment) {
+    public List<Produkt> findByPartialCode(String fragment) {
         return produktDao.findByPartialCode(fragment);
     }
 
@@ -99,7 +98,7 @@ public class KasaService {
         return koszykDao.findAll();
     }
 
-    public Transakcja finalizujTransakcje(String typPlatnosci) {
+    public Transakcja finalizeTransaction(String typPlatnosci) {
         List<Produkt> items = koszykDao.findAll();
         if (items.isEmpty())
             throw new IllegalStateException("Koszyk jest pusty — nie można finalizować transakcji");
@@ -107,10 +106,10 @@ public class KasaService {
         BigDecimal total = BigDecimal.ZERO;
         Map<String,Integer> ilosci = new HashMap<>();
         for (Produkt p : items)
-            ilosci.merge(p.getKodKreskowy(), 1, Integer::sum);
+            ilosci.merge(p.getBarCode(), 1, Integer::sum);
         for (var e : ilosci.entrySet()) {
             Produkt p = items.stream()
-                    .filter(x -> x.getKodKreskowy().equals(e.getKey()))
+                    .filter(x -> x.getBarCode().equals(e.getKey()))
                     .findFirst().get();
             BigDecimal unit = getPriceWithDiscount(p);
             total = total.add(unit.multiply(BigDecimal.valueOf(e.getValue())));
@@ -123,7 +122,7 @@ public class KasaService {
         String id = transakcjaDao.save(tx);
         tx.setId(id);
 
-        ilosci.forEach((kod, qty) -> produktDao.zmniejszStan(kod, qty));
+        ilosci.forEach((kod, qty) -> produktDao.reduceStock(kod, qty));
 
         resetSession();
         return tx;
@@ -142,10 +141,10 @@ public class KasaService {
 
 
     public BigDecimal getPriceWithDiscount(Produkt product) {
-        BigDecimal price = product.getCena();
+        BigDecimal price = product.getPrice();
 
         if (loyaltyCustomerId != null) {
-            var promo = promotionDao.findByProductCode(product.getKodKreskowy());
+            var promo = promotionDao.findByProductCode(product.getBarCode());
             if (promo != null && promo.getDiscount().compareTo(BigDecimal.ZERO) > 0) {
                 price = price.multiply(BigDecimal.ONE.subtract(promo.getDiscount()));
             }

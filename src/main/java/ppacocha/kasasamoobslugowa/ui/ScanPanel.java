@@ -5,7 +5,6 @@ import ppacocha.kasasamoobslugowa.service.KasaService;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
 import java.util.List;
 
 public class ScanPanel extends JPanel {
@@ -45,7 +44,7 @@ public class ScanPanel extends JPanel {
     private void addProduct() {
         String code = codeField.getText().trim();
         try {
-            kasaService.dodajPoKodzieLubTagu(code);
+            kasaService.addByCodeOrTag(code);
             mainFrame.getCartPanel().refreshList();
             messageLabel.setText("Dodano produkt: " + code);
             codeField.setText("");
@@ -61,8 +60,8 @@ public class ScanPanel extends JPanel {
             return;
         }
 
-        List<Produkt> wyniki = kasaService.szukajPoFragmencieKodu(partial);
-        if (wyniki.isEmpty()) {
+        List<Produkt> results = kasaService.findByPartialCode(partial);
+        if (results.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Brak wyników.");
             return;
         }
@@ -73,14 +72,14 @@ public class ScanPanel extends JPanel {
             "Wyniki wyszukiwania",
             JOptionPane.PLAIN_MESSAGE,
             null,
-            wyniki.toArray(),
-            wyniki.get(0)
+            results.toArray(),
+            results.get(0)
         );
 
         if (selected != null) {
-            kasaService.dodajPoKodzieLubTagu(selected.getKodKreskowy());
+            kasaService.addByCodeOrTag(selected.getBarCode());
             mainFrame.getCartPanel().refreshList();
-            messageLabel.setText("Dodano produkt: " + selected.getNazwa());
+            messageLabel.setText("Dodano produkt: " + selected.getName());
             codeField.setText("");
         }
     }
