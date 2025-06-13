@@ -1,4 +1,3 @@
-// src/test/java/ppacocha/kasasamoobslugowa/ui/NumericInputDialogTest.java
 package ppacocha.kasasamoobslugowa.ui;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -30,15 +29,12 @@ class NumericInputDialogTest {
         Method onKey = NumericInputDialog.class.getDeclaredMethod("onKey", String.class);
         onKey.setAccessible(true);
         JTextField tf = getField(dlg, "tf", JTextField.class);
-
         onKey.invoke(dlg, "1");
         onKey.invoke(dlg, "2");
         onKey.invoke(dlg, "3");
         assertEquals("123", tf.getText());
-
         onKey.invoke(dlg, "\u2190");
         assertEquals("12", tf.getText());
-
         onKey.invoke(dlg, "CLR");
         assertEquals("", tf.getText());
     }
@@ -46,11 +42,9 @@ class NumericInputDialogTest {
     @Test
     void loyaltyMode_initialPrefixIsPoland() throws Exception {
         Frame owner = new Frame();
-        Constructor<NumericInputDialog> ctor =
-                NumericInputDialog.class.getDeclaredConstructor(Frame.class, String.class, String.class, boolean.class);
+        Constructor<NumericInputDialog> ctor = NumericInputDialog.class.getDeclaredConstructor(Frame.class, String.class, String.class, boolean.class);
         ctor.setAccessible(true);
         NumericInputDialog loy = ctor.newInstance(owner, "pl", "loyalty", true);
-
         @SuppressWarnings("unchecked")
         JList<Object> list = getField(loy, "prefixList", JList.class);
         Object country = list.getSelectedValue();

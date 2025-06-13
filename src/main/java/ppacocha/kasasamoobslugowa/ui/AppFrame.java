@@ -949,7 +949,6 @@ public class AppFrame extends JFrame {
     }//GEN-LAST:event_callHelpButton2ActionPerformed
     private void gotoManualEntryButtonActionPerformed(ActionEvent evt) {
         //GEN-FIRST:event_gotoManualEntryButtonActionPerformed
-        System.out.println(LanguageSetup.get(PickedLanguage, "goTo.manual"));
         refreshBasketTable();
         layout.show(layoutPanel, "cardSearch");
 

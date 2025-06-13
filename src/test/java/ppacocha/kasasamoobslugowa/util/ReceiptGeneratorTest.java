@@ -67,7 +67,7 @@ class ReceiptGeneratorTest {
         );
 
         assertNotNull(img);
-        assertTrue(img.getWidth()  >= 300);
+        assertTrue(img.getWidth() >= 300);
         assertTrue(img.getHeight() >= sample.size()*12);
         int white = 0xFFFFFF;
         int rgb = img.getRGB(0,0) & 0xFFFFFF;

@@ -24,4 +24,11 @@ class AppThemeTest {
         assertEquals(AppTheme.PRIMARY_BUTTON_BG, UIManager.get("Button.background"));
         assertEquals(AppTheme.TABLE_ROW_HEIGHT, UIManager.get("Table.rowHeight"));
     }
+    @Test
+    void buttonSizeIsReasonable() {
+        Dimension d = AppTheme.BUTTON_SIZE;
+        assertNotNull(d);
+        assertTrue(d.width>0,"szerokość musi być dodatnia");
+        assertTrue(d.height>0,"wysokość musi być dodatnia");
+    }
 }

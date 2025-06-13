@@ -22,6 +22,7 @@ public class MongoKoszykDAO implements KoszykDAO {
         coll = db.getCollection("koszyk");
     }
 
+
     @Override
     public void add(String barCode, int amount) {
         coll.updateOne(eq("kod_kreskowy", barCode),

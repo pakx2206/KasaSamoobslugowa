@@ -15,7 +15,6 @@ public class CardReaderNdef {
             throw new IllegalStateException("Brak czytników NFC");
         }
         this.terminal = terminals.get(0);
-        System.out.println("Using terminal: " + terminal.getName());
     }
 
     public String readTextRecord() throws Exception {

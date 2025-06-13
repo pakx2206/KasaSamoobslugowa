@@ -39,7 +39,6 @@ public class MongoClientProvider {
     }
     public static void main(String[] args) {
         var db = MongoClientProvider.getDatabase();
-        System.out.println("Collections: " + db.listCollectionNames().into(new ArrayList<>()));
     }
 
 }

@@ -44,8 +44,7 @@ class LanguageSetupTest {
 
     @Test
     void missingKeyReturnsNull() {
-        assertNull(LanguageSetup.get("pl","__BRAK_TAKIEGO_KLUCZA__"));
-        assertNull(LanguageSetup.get("en","__BRAK_TAKIEGO_KLUCZA__"));
+        assertNull(LanguageSetup.get("pl", "this.key.does.not.exist"));
     }
 
     @Test
@@ -53,4 +52,24 @@ class LanguageSetupTest {
         assertEquals(LanguageSetup.get("en","menu.help"),
                 LanguageSetup.get("de","menu.help"));
     }
+    @Test
+    void defaultLanguageHasErrorKey() {
+        String plError = LanguageSetup.get("pl","error");
+        assertNotNull(plError);
+        assertFalse(plError.isBlank());
+    }
+
+    @Test
+    void englishLanguageHasErrorKey() {
+        String enError = LanguageSetup.get("en","error");
+        assertNotNull(enError);
+        assertFalse(enError.isBlank());
+        assertNotEquals(LanguageSetup.get("pl","error"), enError);
+    }
+
+    @Test
+    void missingKeyReturnsPlaceholder() {
+        assertNull(LanguageSetup.get("pl", "this.key.does.not.exist"));
+    }
+
 }
